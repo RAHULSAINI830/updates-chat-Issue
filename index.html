@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Chatbot Widget with Persistent History & Reset</title>
+  <style>
+    /* Main container fixed in the bottom-right corner */
+    #chatbot-widget {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      z-index: 1000;
+      width: 420px;
+      pointer-events: none; /* disable pointer events on container; enabled on children */
+    }
+    /* Initial popup message positioned to the left of the chat icon */
+    #initial-popup {
+      position: absolute;
+      bottom: 10px;
+      right: 70px; /* to the left of the chat icon */
+      background: #4a90e2;
+      color: #fff;
+      padding: 10px 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      pointer-events: auto;
+      animation: fadeIn 0.5s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    /* Always-visible chat icon styling */
+    .chatbot-icon {
+      width: 60px;
+      height: 60px;
+      background: linear-gradient(145deg, #4a90e2, #357ab7);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+      pointer-events: auto;
+      position: absolute;
+      bottom: 0;
+      right: 0;
+    }
+    /* Notification badge styling */
+    #chat-badge {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      background: #ff5c5c;
+      color: #fff;
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+    /* Chat window styling */
+    .chatbot-window {
+      position: absolute;
+      bottom: 90px;
+      right: 0;
+      width: 400px;
+      height: 600px;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      pointer-events: auto;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    .chatbot-window.open {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .chatbot-header {
+      background: linear-gradient(145deg, #4a90e2, #357ab7);
+      color: #fff;
+      padding: 12px;
+      text-align: center;
+      font-size: 1.2em;
+      position: relative;
+    }
+    .close-btn {
+      position: absolute;
+      right: 12px;
+      top: 12px;
+      font-size: 1.2em;
+      cursor: pointer;
+      color: #fff;
+    }
+    /* Scrollable area for messages */
+    .chatbot-messages {
+      flex: 1;
+      padding: 10px;
+      overflow-y: auto;
+      background: #f9f9f9;
+    }
+    /* Inline options container */
+    .chatbot-options {
+      margin-top: 5px;
+      text-align: center;
+    }
+    .chatbot-options button {
+      background: linear-gradient(145deg, #4a90e2, #357ab7);
+      border: none;
+      color: #fff;
+      padding: 8px 12px;
+      margin: 5px 3px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    .chatbot-options button:hover {
+      background: #357ab7;
+    }
+    .chatbot-feedback {
+      padding: 10px;
+      background: #f1f1f1;
+      border-top: 1px solid #ddd;
+      text-align: center;
+    }
+    .feedback-btn {
+      background: #7ed321;
+      border: none;
+      color: #fff;
+      padding: 8px 12px;
+      margin: 5px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    .feedback-btn:hover {
+      background: #6bb41a;
+    }
+    /* Message bubble styles */
+    .message {
+      display: flex;
+      margin-bottom: 10px;
+      align-items: flex-end;
+    }
+    .message.bot {
+      justify-content: flex-start;
+    }
+    .message.user {
+      justify-content: flex-end;
+    }
+    .message .icon {
+      width: 32px;
+      height: 32px;
+      flex-shrink: 0;
+    }
+    .message.bot .icon {
+      margin-right: 8px;
+    }
+    .message.user .icon {
+      margin-left: 8px;
+    }
+    .bubble {
+      max-width: 70%;
+      padding: 10px;
+      border-radius: 15px;
+      font-size: 0.95em;
+      line-height: 1.3;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      white-space: pre-wrap;
+    }
+    .message.bot .bubble {
+      background: #e9efff;
+      border: 1px solid #c3d0ea;
+      color: #333;
+    }
+    .message.user .bubble {
+      background: #ee5566;
+      border: 1px solid #cc4455;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <div id="chatbot-widget">
+    <!-- Initial popup (appears only once) -->
+    <div id="initial-popup">
+      Hi! I’ll assist you with your issues.
+    </div>
+    <!-- Always-visible chat icon with badge -->
+    <div class="chatbot-icon" id="chatbot-icon">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="#fff" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2a2 2 0 00-2 2v1H6a2 2 0 00-2 2v3h16V7a2 2 0 00-2-2h-4V4a2 2 0 00-2-2zm-6 9v6a2 2 0 002 2h12a2 2 0 002-2v-6H6zm5 3a1 1 0 112 0 1 1 0 11-2 0zm6 0a1 1 0 112 0 1 1 0 11-2 0z"/>
+      </svg>
+      <span id="chat-badge">1 new</span>
+    </div>
+    <!-- Chat window (initially hidden) -->
+    <div class="chatbot-window" id="chatbot-window">
+      <div class="chatbot-header">
+        ChatBot
+        <span class="close-btn" id="chatbot-close">&times;</span>
+      </div>
+      <!-- Scrollable messages area -->
+      <div id="messages" class="chatbot-messages"></div>
+      <div id="chatbot-feedback" class="chatbot-feedback" style="display: none;">
+        <p>Was this helpful?</p>
+        <button id="feedback-yes" class="feedback-btn">Yes</button>
+        <button id="feedback-no" class="feedback-btn">No</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Global array to hold conversation history.
+    let chatHistory = [];
+
+    // Load chat history from localStorage.
+    function loadChatHistory() {
+      const stored = localStorage.getItem('chatHistory');
+      if (stored) {
+        chatHistory = JSON.parse(stored);
+        chatHistory.forEach(message => {
+          addMessageToDOM(message.side, message.text);
+        });
+      }
+    }
+
+    // Save chat history to localStorage.
+    function saveChatHistory() {
+      localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
+    }
+
+    // Append a message (updates DOM and history).
+    function addMessage(side, text, updateStorage = true) {
+      addMessageToDOM(side, text);
+      if (updateStorage) {
+        chatHistory.push({ side, text });
+        saveChatHistory();
+      }
+    }
+
+    // Create and append the DOM element for a chat message.
+    function addMessageToDOM(side, text) {
+      const messagesContainer = document.getElementById("messages");
+      const messageDiv = document.createElement("div");
+      messageDiv.classList.add("message", side);
+      
+      const iconDiv = document.createElement("div");
+      iconDiv.classList.add("icon");
+      if (side === "bot") {
+        iconDiv.innerHTML = `
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="#4a90e2" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2a2 2 0 00-2 2v1H6a2 2 0 00-2 2v3h16V7a2 2 0 00-2-2h-4V4a2 2 0 00-2-2zm-6 9v6a2 2 0 002 2h12a2 2 0 002-2v-6H6zm5 3a1 1 0 112 0 1 1 0 11-2 0zm6 0a1 1 0 112 0 1 1 0 11-2 0z"/>
+          </svg>`;
+      } else {
+        iconDiv.innerHTML = `
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="#ee5566" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2a5 5 0 00-5 5v2a5 5 0 0010 0V7a5 5 0 00-5-5zm0 10c-3.33 0-10 1.67-10 5v3h20v-3c0-3.33-6.67-5-10-5z"/>
+          </svg>`;
+      }
+      
+      const bubbleDiv = document.createElement("div");
+      bubbleDiv.classList.add("bubble");
+      bubbleDiv.textContent = text;
+      
+      if (side === "bot") {
+        messageDiv.appendChild(iconDiv);
+        messageDiv.appendChild(bubbleDiv);
+      } else {
+        messageDiv.appendChild(bubbleDiv);
+        messageDiv.appendChild(iconDiv);
+      }
+      
+      messagesContainer.appendChild(messageDiv);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    // Display a question from the conversation tree.
+    function displayQuestion(key) {
+      const questionObj = questions[key];
+      addMessage("bot", questionObj.text);
+      
+      const messagesContainer = document.getElementById("messages");
+      const optionsContainer = document.createElement("div");
+      optionsContainer.classList.add("chatbot-options");
+      
+      questionObj.options.forEach(option => {
+        const btn = document.createElement("button");
+        btn.textContent = option.text;
+        btn.addEventListener("click", () => {
+          optionsContainer.remove();
+          addMessage("user", option.text);
+          if (key === "q1") {
+            document.getElementById("chatbot-feedback").style.display = "block";
+          }
+          if (option.next && option.next.length > 0) {
+            const nextKey = option.next[Math.floor(Math.random() * option.next.length)];
+            setTimeout(() => displayQuestion(nextKey), 500);
+          } else {
+            addMessage("bot", "Thank you for chatting!");
+          }
+        });
+        optionsContainer.appendChild(btn);
+      });
+      messagesContainer.appendChild(optionsContainer);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    // Conversation tree with 33 nodes.
+    const questions = {
+      q1: {
+        text: "Welcome to our support chat! How can I help you?",
+        options: [
+          { text: "I have a technical issue", next: ["q2", "q3", "q4"] },
+          { text: "I have a billing question", next: ["q5", "q6", "q7"] },
+          { text: "I have a general inquiry", next: ["q8", "q9", "q10"] }
+        ]
+      },
+      q2: {
+        text: "Can you describe your technical issue? Is it software related?",
+        options: [
+          { text: "Yes, it's software related", next: ["q11", "q12"] },
+          { text: "No, it's hardware related", next: ["q13", "q14"] }
+        ]
+      },
+      q3: {
+        text: "Have you tried restarting your device to see if that resolves the issue?",
+        options: [
+          { text: "Yes, but it didn't help", next: ["q15", "q16"] },
+          { text: "No, I haven't tried that", next: ["q17", "q18"] }
+        ]
+      },
+      q4: {
+        text: "Is the issue intermittent or constant?",
+        options: [
+          { text: "Intermittent", next: ["q19", "q20"] },
+          { text: "Constant", next: ["q21"] }
+        ]
+      },
+      q5: {
+        text: "Is your billing question about an invoice discrepancy?",
+        options: [
+          { text: "Yes", next: ["q22", "q23"] },
+          { text: "No", next: ["q24"] }
+        ]
+      },
+      q6: {
+        text: "Are you experiencing issues with payment processing?",
+        options: [
+          { text: "Yes", next: ["q25"] },
+          { text: "No", next: ["q26"] }
+        ]
+      },
+      q7: {
+        text: "Do you need assistance with a refund or chargeback?",
+        options: [
+          { text: "Refund", next: ["q27"] },
+          { text: "Chargeback", next: ["q28"] }
+        ]
+      },
+      q8: {
+        text: "What general inquiry do you have? Is it about product features?",
+        options: [
+          { text: "Yes", next: ["q29"] },
+          { text: "No", next: ["q30"] }
+        ]
+      },
+      q9: {
+        text: "Would you like to know more about our company history?",
+        options: [
+          { text: "Yes", next: ["q31"] },
+          { text: "No", next: ["q32"] }
+        ]
+      },
+      q10: {
+        text: "Do you have feedback about our service?",
+        options: [
+          { text: "Yes, I'd like to provide feedback", next: ["q33"] },
+          { text: "No, thank you", next: [] }
+        ]
+      },
+      q11: {
+        text: "Have you updated to the latest version of our software?",
+        options: [
+          { text: "Yes", next: ["q12"] },
+          { text: "No", next: ["q13"] }
+        ]
+      },
+      q12: {
+        text: "Please try reinstalling the software. Did that help?",
+        options: [
+          { text: "Yes, it helped", next: [] },
+          { text: "No, still having issues", next: ["q15"] }
+        ]
+      },
+      q13: {
+        text: "For hardware issues, have you checked all connections?",
+        options: [
+          { text: "Yes, all connections are secure", next: ["q16"] },
+          { text: "No, I'll check them now", next: [] }
+        ]
+      },
+      q14: {
+        text: "Have you considered professional repair service?",
+        options: [
+          { text: "Yes", next: [] },
+          { text: "No", next: [] }
+        ]
+      },
+      q15: {
+        text: "Would you like to speak with a technical support specialist?",
+        options: [
+          { text: "Yes, please connect me", next: [] },
+          { text: "No, I'll try more troubleshooting", next: [] }
+        ]
+      },
+      q16: {
+        text: "I recommend restarting your device again. Has that worked?",
+        options: [
+          { text: "Yes", next: [] },
+          { text: "No", next: ["q17"] }
+        ]
+      },
+      q17: {
+        text: "Have you tried clearing your browser cache?",
+        options: [
+          { text: "Yes", next: ["q18"] },
+          { text: "No", next: [] }
+        ]
+      },
+      q18: {
+        text: "Try clearing your cache and cookies, then reload the page. Did that solve the problem?",
+        options: [
+          { text: "Yes", next: [] },
+          { text: "No", next: [] }
+        ]
+      },
+      q19: {
+        text: "For intermittent issues, is the problem occurring at specific times?",
+        options: [
+          { text: "Yes", next: ["q20"] },
+          { text: "No", next: ["q21"] }
+        ]
+      },
+      q20: {
+        text: "Please monitor the timings and report back if the issue persists.",
+        options: [
+          { text: "Will do", next: [] }
+        ]
+      },
+      q21: {
+        text: "It seems the problem is constant; I recommend reaching out to support.",
+        options: [
+          { text: "Connect me to support", next: [] }
+        ]
+      },
+      q22: {
+        text: "For invoice discrepancies, did you receive an incorrect amount?",
+        options: [
+          { text: "Yes", next: ["q23"] },
+          { text: "No", next: [] }
+        ]
+      },
+      q23: {
+        text: "Please verify your invoice details and contact billing support if the error persists.",
+        options: [
+          { text: "Understood", next: [] }
+        ]
+      },
+      q24: {
+        text: "Is your question about subscription plans?",
+        options: [
+          { text: "Yes", next: ["q25"] },
+          { text: "No", next: [] }
+        ]
+      },
+      q25: {
+        text: "Our payment gateway is currently under maintenance. Please try again later.",
+        options: [
+          { text: "Okay", next: [] }
+        ]
+      },
+      q26: {
+        text: "For billing inquiries, please visit our FAQ page for more details.",
+        options: [
+          { text: "Visit FAQ", next: [] }
+        ]
+      },
+      q27: {
+        text: "To process a refund, please fill out our refund form.",
+        options: [
+          { text: "Proceed to form", next: [] }
+        ]
+      },
+      q28: {
+        text: "For chargebacks, please contact our financial department directly.",
+        options: [
+          { text: "Contact now", next: [] }
+        ]
+      },
+      q29: {
+        text: "Our product features include X, Y, and Z. Would you like more details?",
+        options: [
+          { text: "Yes, more details", next: ["q30"] },
+          { text: "No, that's enough", next: [] }
+        ]
+      },
+      q30: {
+        text: "For more detailed product info, please check our product page.",
+        options: [
+          { text: "Go to product page", next: [] }
+        ]
+      },
+      q31: {
+        text: "Our company was founded in 2000 with a mission to innovate.",
+        options: [
+          { text: "Tell me more", next: ["q32"] },
+          { text: "That's enough", next: [] }
+        ]
+      },
+      q32: {
+        text: "For more company history, visit our About Us page.",
+        options: [
+          { text: "Visit About Us", next: [] }
+        ]
+      },
+      q33: {
+        text: "Please provide your feedback in the form below.",
+        options: [
+          { text: "Submit Feedback", next: [] }
+        ]
+      }
+    };
+
+    // On page load, load existing chat history and always start with Q1.
+    document.addEventListener("DOMContentLoaded", () => {
+      loadChatHistory();
+      
+      const chatWindow = document.getElementById("chatbot-window");
+      const chatIcon = document.getElementById("chatbot-icon");
+      const chatClose = document.getElementById("chatbot-close");
+      const initialPopup = document.getElementById("initial-popup");
+      const chatBadge = document.getElementById("chat-badge");
+      
+      // When user clicks the chat icon, always start with Q1.
+      chatIcon.addEventListener("click", () => {
+        if (!chatWindow.classList.contains("open")) {
+          chatWindow.classList.add("open");
+          if (initialPopup) { initialPopup.style.display = "none"; }
+          if (chatBadge) { chatBadge.style.display = "none"; }
+          // Always ask Q1 anew regardless of previous history.
+          displayQuestion("q1");
+        } else {
+          chatWindow.classList.remove("open");
+        }
+      });
+      
+      chatClose.addEventListener("click", () => {
+        chatWindow.classList.remove("open");
+      });
+      
+      document.getElementById("feedback-yes").addEventListener("click", () => {
+        alert("Thank you for your positive feedback!");
+      });
+      document.getElementById("feedback-no").addEventListener("click", () => {
+        alert("We're sorry to hear that. We'll strive to improve.");
+      });
+    });
+  </script>
+</body>
+</html>
