@@ -65,7 +65,7 @@
       bottom: 90px;
       right: 20px;
       width: 450px;
-      height: 800px;
+      height: 700px;
       background-color: #fff;
       border: none;
       border-radius: 12px;
@@ -142,6 +142,7 @@
       font-size: 16px;
       line-height: 1.5;
       color: #333;
+      position: relative;
     }
     .chatbot-body::-webkit-scrollbar {
       width: 8px;
@@ -150,7 +151,7 @@
       background-color: rgba(0,0,0,0.2);
       border-radius: 4px;
     }
-    /* Search bar container (always visible) */
+    /* Global Search bar (main view) */
     .search-container {
       padding: 15px 15px 20px 0;
     }
@@ -177,8 +178,8 @@
       display: flex;
       flex-direction: column;
       gap: 12px;
+      transition: opacity 0.4s ease;
     }
-    /* Each main option as a card */
     .option-container {
       border: 2px solid #f0f0f0;
       border-radius: 8px;
@@ -209,7 +210,7 @@
     .main-option:hover {
       background-color: #f6f6f6;
       transform: translateY(-2px);
-      box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+      box-shadow: 0px 4px 8px rgba(0,0,0,0.1);
     }
     .option-icon {
       margin-right: 10px;
@@ -253,7 +254,7 @@
       background-color: #f0f0f0;
       transform: translateX(5px);
     }
-    /* Icon back button instead of text */
+    /* Back button inside options */
     .back-button {
       background: transparent;
       border: none;
@@ -266,9 +267,9 @@
     .back-button:hover {
       color: #cc4455;
     }
-    /* Separate Popular Tools Section */
-    .tools-section {
-      display: none; /* Hide initially */
+    /* Resource sections (for forms, templates, tools) */
+    .resource-section {
+      display: none;
       background: #f0f4f8;
       padding: 20px;
       border-radius: 10px;
@@ -279,23 +280,23 @@
       overflow: hidden;
       opacity: 0;
     }
-    .tools-section.open {
+    .resource-section.open {
       display: block;
       max-height: 400px;
       opacity: 1;
     }
-    .tools-section h4 {
+    .resource-section h4 {
       margin: 0 0 15px;
       font-size: 18px;
       color: #333;
       font-weight: 500;
     }
-    .tools-list {
+    .resource-list {
       display: flex;
       flex-wrap: wrap;
       gap: 15px;
     }
-    .tool-item {
+    .resource-item {
       background: #fff;
       border: 1px solid #ddd;
       border-radius: 10px;
@@ -307,21 +308,22 @@
       align-items: center;
       justify-content: center;
     }
-    .tool-item:hover {
+    .resource-item:hover {
       transform: translateY(-3px);
       box-shadow: 0 4px 8px rgba(0,0,0,0.15);
     }
-    .tool-item a {
+    .resource-item a {
       text-decoration: none;
       color: #333;
       font-size: 16px;
       text-align: center;
       width: 100%;
     }
-    /* Video Container for "Watch Video" option */
+    /* Video Container with close button */
     .video-container {
       display: none;
       margin: 15px 20px;
+      position: relative;
     }
     .video-container.open {
       display: block;
@@ -331,6 +333,85 @@
       height: 250px;
       border: none;
       border-radius: 8px;
+    }
+    .close-video {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: #ee5566;
+      color: #fff;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      z-index: 11;
+    }
+    .close-video:hover {
+      background: #cc4455;
+    }
+    /* Search Tab styling (second tab) */
+    .search-tab {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: #fff;
+      padding: 20px;
+      overflow-y: auto;
+      z-index: 10;
+      opacity: 0;
+      transform: translateY(20px);
+      pointer-events: none;
+      transition: opacity 0.4s ease, transform 0.4s ease;
+      border-top: 2px solid #ee5566;
+    }
+    .search-tab.open {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+    .search-tab-title {
+      font-size: 20px;
+      margin-bottom: 15px;
+      color: #333;
+      text-align: center;
+    }
+    .search-tab-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    .search-tab-header input {
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      margin-bottom: 15px;
+    }
+    .back-search {
+      background: transparent;
+      border: none;
+      color: #ee5566;
+      font-size: 16px;
+      margin-bottom: 15px;
+      cursor: pointer;
+    }
+    .search-results-section {
+      margin-bottom: 20px;
+    }
+    .search-results-section h4 {
+      margin-bottom: 10px;
+      font-size: 18px;
+      color: #333;
+    }
+    .search-item {
+      padding: 10px;
+      border-bottom: 1px solid #e0e0e0;
+      font-size: 16px;
+      color: #333;
     }
   </style>
 </head>
@@ -357,15 +438,16 @@
       <button class="maximize-button" onclick="toggleMaximize(event)">⛶</button>
     </div>
     <div class="chatbot-body">
-      <!-- Search bar always visible -->
-      <div class="search-container">
+      <!-- Global Search bar in main view -->
+      <div class="search-container" id="globalSearchContainer">
         <div class="search-input-wrapper">
           <input type="text" id="searchBar" placeholder="Search..." />
           <span class="search-icon">&#128269;</span>
         </div>
       </div>
-      <div class="chatbot-options">
-        <!-- Option 1 -->
+      <!-- Chatbot Options -->
+      <div class="chatbot-options" id="chatbotOptions">
+        <!-- Option 1: ZenTrades -->
         <div class="option-container" data-placeholder="Search ZenTrades">
           <button class="main-option">
             <span class="option-icon">🚀</span>
@@ -379,7 +461,7 @@
             <button class="sub-option">Talk to customer support</button>
           </div>
         </div>
-        <!-- Option 2 -->
+        <!-- Option 2: Forms -->
         <div class="option-container" data-placeholder="Search for forms">
           <button class="main-option">
             <span class="option-icon">📝</span>
@@ -392,8 +474,12 @@
             <button class="sub-option">Chat with support</button>
             <button class="sub-option">Look for forms</button>
           </div>
+          <div class="resource-section forms-section">
+            <h4>Popular Forms</h4>
+            <div class="resource-list forms-list"></div>
+          </div>
         </div>
-        <!-- Option 3 -->
+        <!-- Option 3: Invoices -->
         <div class="option-container" data-placeholder="Search for invoices">
           <button class="main-option">
             <span class="option-icon">📄</span>
@@ -407,7 +493,7 @@
             <button class="sub-option">Create invoices now</button>
           </div>
         </div>
-        <!-- Option 4 -->
+        <!-- Option 4: Checklists -->
         <div class="option-container" data-placeholder="Search for checklists">
           <button class="main-option">
             <span class="option-icon">☑️</span>
@@ -421,7 +507,7 @@
             <button class="sub-option">Look for checklists</button>
           </div>
         </div>
-        <!-- Option 5 -->
+        <!-- Option 5: Templates -->
         <div class="option-container" data-placeholder="Search for templates">
           <button class="main-option">
             <span class="option-icon">📑</span>
@@ -434,37 +520,97 @@
             <button class="sub-option">Chat with support</button>
             <button class="sub-option">Look for templates</button>
           </div>
+          <div class="resource-section templates-section">
+            <h4>Popular Templates</h4>
+            <div class="resource-list templates-list"></div>
+          </div>
         </div>
-        <!-- Option 6: How to use our tools -->
+        <!-- Option 6: Tools -->
         <div class="option-container" data-placeholder="Search for tools">
           <button class="main-option">
             <span class="option-icon">🛠️</span>
             <span class="option-text">How to use our tools</span>
             <span class="arrow">></span>
           </button>
-          <!-- Sub-options container for Option 6 -->
           <div class="sub-options">
             <button class="back-button">&#8592;</button>
             <button class="sub-option">Watch Video</button>
             <button class="sub-option">Chat with support</button>
-            <button class="sub-option">Look for templates</button>
+            <button class="sub-option">Look for more Tools</button>
           </div>
-          <!-- Separate Video Container -->
           <div class="video-container">
+            <button class="close-video" onclick="closeVideo(event)">Close Video</button>
             <iframe src="https://www.youtube.com/embed/o99EznX3ABw?si=rNQ3IfO8C6t3lwOS" title="YouTube video player" frameborder="0" allowfullscreen></iframe>
           </div>
-          <!-- Separate Popular Tools Section container (initially hidden) -->
-          <div class="tools-section">
+          <div class="resource-section tools-section">
             <h4>Popular Tools</h4>
-            <div class="tools-list"></div>
+            <div class="resource-list tools-list"></div>
           </div>
         </div>
+      </div>
+      <!-- Search Tab (second tab) -->
+      <div class="search-tab" id="searchTab">
+        <button class="back-search" onclick="closeSearchTab()">← Back</button>
+        <h2 class="search-tab-title">Search Resources</h2>
+        <div class="search-tab-header">
+          <input type="text" id="searchTabInput" placeholder="Search..." />
+        </div>
+        <div id="searchResults"></div>
       </div>
     </div>
   </div>
 
   <script>
-    // Global array of tool objects
+    // Global variable to track selected category ('forms', 'templates', 'tools') or null (aggregated)
+    let activeCategory = null;
+    
+    // Resource arrays
+    const forms = [
+      { name: "5 Year Internal Obstruction Form", link: "https://zentrades.pro/zenfire/forms/5-year-internal-obstruction-form" },
+      { name: "5 Year Obstruction Sprinkler Inspection Form", link: "https://zentrades.pro/zenfire/forms/5-year-obstruction-sprinkler-inspection-form" },
+      { name: "AES7", link: "https://zentrades.pro/zenfire/forms/aes-7-water-spray-fixed-system-inspection-report" },
+      { name: "Anchor Inn Inspection Checklist Form", link: "https://zentrades.pro/zenfire/forms/free-anchor-inn-inspection-checklist-form-fill-download" },
+      { name: "ANSI Eye Wash Equipment Annual Checklist", link: "https://zentrades.pro/zenfire/forms/ansi-eye-wash-equipment-annual-checklist-form" },
+      { name: "Aviator Arrival Inspection Checklist 6.1.3 Form", link: "https://zentrades.pro/zenfire/forms/aviator-arrival-inspection-checklist-6-1-3-form" },
+      { name: "Boat Inspection Report Form", link: "https://zentrades.pro/zenfire/forms/boat-inspection-report-form" },
+      { name: "Branch Manager Inspection Checklist Form", link: "https://zentrades.pro/zenfire/forms/free-branch-manager-inspection-checklist-form-fill-download" },
+      { name: "Building Condition Assessment Checklist Form", link: "https://zentrades.pro/zenfire/forms/building-condition-assessment-checklist-form" },
+      { name: "Building Site Inspection Checklist Form", link: "https://zentrades.pro/zenfire/forms/building-site-inspection-checklist-form" },
+      { name: "CBRE Monthly Site Inspection Checklist Form", link: "https://zentrades.pro/zenfire/forms/cbre-monthly-site-inspection-checklist-form" },
+      { name: "CO2 Systems Inspection Form NFPA12", link: "https://zentrades.pro/zenfire/forms/co2-systems-inspection-form-nfpa12" },
+      { name: "Construction Hazard Identification and Risk Assessment Checklist", link: "https://zentrades.pro/zenfire/forms/construction-hazard-identification-and-risk-assessment-checklist" },
+      { name: "Construction Site Cleaning Checklist Form", link: "https://zentrades.pro/zenfire/forms/construction-site-cleaning-checklist-form" },
+      { name: "Contractors Material and Test Certificate for Above Ground Piping Form", link: "https://zentrades.pro/zenfire/forms/contractors-material-and-test-certificate-for-above-ground-piping-form" },
+      { name: "Countrywide Property Inspection Checklist Form", link: "https://zentrades.pro/zenfire/forms/countrywide-property-inspection-checklist-form" },
+      { name: "Daily Prestart Safety Inspection Checklist Form", link: "https://zentrades.pro/zenfire/forms/daily-prestart-safety-inspection-checklist-form" },
+      { name: "Daily Site Safety and Environmental Inspection Record Civil Checklist Form", link: "https://zentrades.pro/zenfire/forms/daily-site-safety-and-environmental-inspection-record-civil-checklist-form" },
+      { name: "Dry Valve Trip Test", link: "https://zentrades.pro/zenfire/forms/dry-valve-trip-test" },
+      { name: "Emergency Exit Light Inspection Report", link: "https://zentrades.pro/zenfire/forms/emergency-exit-light-inspection-report-from" },
+      { name: "Emergency Light Inspection Report", link: "https://zentrades.pro/zenfire/forms/emergency-light-inspection-report" },
+      { name: "Fire Door Inspection Form NFPA 80", link: "https://zentrades.pro/zenfire/forms/fire-door-inspection-checklist-form" },
+      { name: "Fire Extinguisher Inspection Form", link: "https://zentrades.pro/zenfire/forms/fire-extinguisher-inspection-form" },
+      { name: "Fire Hose Inspection Report", link: "https://zentrades.pro/zenfire/forms/fire-hose-inspection-report-form" },
+      { name: "Fire Pump Annual Inspection", link: "https://zentrades.pro/zenfire/forms/fire-pump-annual-inspection" },
+      { name: "Fire Pump Monthly Inspection, Testing and Maintenance", link: "https://zentrades.pro/zenfire/forms/fire-pump-monthly-inspection-nfpa-25" },
+      { name: "Fire Pump Performance Test Form", link: "https://zentrades.pro/zenfire/forms/fire-pump-performance-test-form" },
+      { name: "Fire Pump Semi annual Inspection NFPA25", link: "https://zentrades.pro/zenfire/forms/fire-pump-semi-annual-inspection-form" },
+      { name: "Fire Pump Weekly Operating Test NFPA25", link: "https://zentrades.pro/zenfire/forms/fire-pump-weekly-operating-test-report-form" },
+      { name: "Fire Sprinkler Inspection Report", link: "https://zentrades.pro/zenfire/forms/fire-sprinkler-inspection-checklist-form" },
+      { name: "Foam Water Sprinkler Inspection Form NFPA25", link: "https://zentrades.pro/zenfire/forms/foam-water-sprinkler-inspection-form" },
+      { name: "Inspection Report of Fire Escapes and Fire Escape Balconies", link: "https://zentrades.pro/zenfire/forms/fire-escapes-and-fire-escape-balcony-inspection-report" },
+      { name: "Kitchen Suppression Inspection Form NFPA96", link: "https://zentrades.pro/zenfire/forms/kitchen-hood-cleaning-report" },
+      { name: "Philadelphia Fire Alarm Inspection Form", link: "https://zentrades.pro/zenfire/forms/free-philadelphia-fire-alarm-inspection-form-fill-download" },
+      { name: "Preaction Deluge Sprinkler Form NFPA25", link: "https://zentrades.pro/zenfire/forms/preaction-deluge-sprinkler-form-nfpa-25" }
+    ];
+    
+    const templates = [
+      { name: 'Invoice Template', link: 'https://example.com/templates/invoice' },
+      { name: 'Resume Template', link: 'https://example.com/templates/resume' },
+      { name: 'Newsletter Template', link: 'https://example.com/templates/newsletter' },
+      { name: 'Report Template', link: 'https://example.com/templates/report' },
+      { name: 'Presentation Template', link: 'https://example.com/templates/presentation' },
+      { name: 'Flyer Template', link: 'https://example.com/templates/flyer' }
+    ];
     const tools = [
       { name: 'Flow rate calculator', link: 'https://resource.zentrades.pro/tools/flow-rate-calculator' },
       { name: 'Pipe volume calculator', link: 'https://resource.zentrades.pro/tools/pipe-volume-calculator' },
@@ -502,16 +648,19 @@
       chatbotWindow.classList.toggle('maximized');
     }
     
-    // Get all option containers and parent container
+    // Get elements
     const optionContainers = document.querySelectorAll('.option-container');
-    const optionsParent = document.querySelector('.chatbot-options');
+    const optionsParent = document.getElementById('chatbotOptions');
     const searchBar = document.getElementById('searchBar');
+    const searchTab = document.getElementById('searchTab');
+    const searchResults = document.getElementById('searchResults');
+    const searchTabInput = document.getElementById('searchTabInput');
     
-    // Function to render the tools list into the tools-section
+    // Render Tools list inside Tools option
     function renderTools(query = '') {
-      const activeContainer = document.querySelector('.option-container.active[data-placeholder="Search for tools"]');
+      const activeContainer = document.querySelector('.option-container.active[data-placeholder*="tools"]');
       if (!activeContainer) return;
-      const toolsListContainer = activeContainer.querySelector('.tools-section .tools-list');
+      const toolsListContainer = activeContainer.querySelector('.tools-section .resource-list.tools-list');
       let filtered = tools;
       if (query.trim() !== '') {
         filtered = tools.filter(tool => tool.name.toLowerCase().includes(query.toLowerCase()));
@@ -521,77 +670,271 @@
       toolsListContainer.innerHTML = '';
       filtered.forEach(tool => {
         const div = document.createElement('div');
-        div.classList.add('tool-item');
+        div.classList.add('resource-item');
         div.innerHTML = `<a href="${tool.link}" target="_blank">${tool.name}</a>`;
         toolsListContainer.appendChild(div);
       });
     }
     
-    // Add event listeners to main options
+    // Render Forms list inside Forms option
+    function renderForms(query = '') {
+      const activeContainer = document.querySelector('.option-container.active[data-placeholder*="forms"]');
+      if (!activeContainer) return;
+      const formsListContainer = activeContainer.querySelector('.forms-section .resource-list.forms-list');
+      let filtered = forms;
+      if (query.trim() !== '') {
+        filtered = forms.filter(item => item.name.toLowerCase().includes(query.toLowerCase()));
+      } else {
+        filtered = forms.slice(0, 5);
+      }
+      formsListContainer.innerHTML = '';
+      filtered.forEach(item => {
+        const div = document.createElement('div');
+        div.classList.add('resource-item');
+        div.innerHTML = `<a href="${item.link}" target="_blank">${item.name}</a>`;
+        formsListContainer.appendChild(div);
+      });
+    }
+    
+    // Render Templates list inside Templates option
+    function renderTemplates(query = '') {
+      const activeContainer = document.querySelector('.option-container.active[data-placeholder*="templates"]');
+      if (!activeContainer) return;
+      const templatesListContainer = activeContainer.querySelector('.templates-section .resource-list.templates-list');
+      let filtered = templates;
+      if (query.trim() !== '') {
+        filtered = templates.filter(item => item.name.toLowerCase().includes(query.toLowerCase()));
+      } else {
+        filtered = templates.slice(0, 5);
+      }
+      templatesListContainer.innerHTML = '';
+      filtered.forEach(item => {
+        const div = document.createElement('div');
+        div.classList.add('resource-item');
+        div.innerHTML = `<a href="${item.link}" target="_blank">${item.name}</a>`;
+        templatesListContainer.appendChild(div);
+      });
+    }
+    
+    // Render aggregated resources (top 5 of forms, templates, tools) for search tab
+    function renderAggregatedResources() {
+      let html = '';
+      html += `<div class="search-results-section"><h4>Forms</h4>`;
+      forms.slice(0, 5).forEach(item => {
+        html += `<div class="search-item"><a href="${item.link}" target="_blank">${item.name}</a></div>`;
+      });
+      html += `</div>`;
+      html += `<div class="search-results-section"><h4>Templates</h4>`;
+      templates.slice(0, 5).forEach(item => {
+        html += `<div class="search-item"><a href="${item.link}" target="_blank">${item.name}</a></div>`;
+      });
+      html += `</div>`;
+      html += `<div class="search-results-section"><h4>Tools</h4>`;
+      tools.slice(0, 5).forEach(item => {
+        html += `<div class="search-item"><a href="${item.link}" target="_blank">${item.name}</a></div>`;
+      });
+      html += `</div>`;
+      searchResults.innerHTML = html;
+    }
+    
+    // Render resources for a specific category in search tab
+    function renderCategoryResources(category) {
+      let html = '';
+      let data = [];
+      if (category === 'forms') {
+        data = forms;
+      } else if (category === 'templates') {
+        data = templates;
+      } else if (category === 'tools') {
+        data = tools;
+      }
+      html += `<div class="search-results-section"><h4>${category.charAt(0).toUpperCase() + category.slice(1)}</h4>`;
+      data.slice(0, 5).forEach(item => {
+        html += `<div class="search-item"><a href="${item.link}" target="_blank">${item.name}</a></div>`;
+      });
+      html += `</div>`;
+      searchResults.innerHTML = html;
+    }
+    
+    // Filter and render search results based on query and category in search tab
+    function filterAndRenderResults(category, query) {
+      let html = '';
+      if (category && (category === 'forms' || category === 'templates' || category === 'tools')) {
+        let data = [];
+        if (category === 'forms') data = forms;
+        else if (category === 'templates') data = templates;
+        else if (category === 'tools') data = tools;
+        const filtered = data.filter(item => item.name.toLowerCase().includes(query.toLowerCase()));
+        html += `<div class="search-results-section"><h4>${category.charAt(0).toUpperCase() + category.slice(1)}</h4>`;
+        if (filtered.length === 0) {
+          html += `<div class="search-item">No results found.</div>`;
+        } else {
+          filtered.forEach(item => {
+            html += `<div class="search-item"><a href="${item.link}" target="_blank">${item.name}</a></div>`;
+          });
+        }
+        html += `</div>`;
+      } else {
+        let aggregated = [];
+        const allData = [
+          ...forms.map(item => ({...item, category: 'Forms'})),
+          ...templates.map(item => ({...item, category: 'Templates'})),
+          ...tools.map(item => ({...item, category: 'Tools'}))
+        ];
+        aggregated = allData.filter(item => item.name.toLowerCase().includes(query.toLowerCase()));
+        if (aggregated.length === 0) {
+          html += `<div class="search-item">No results found.</div>`;
+        } else {
+          const groups = {};
+          aggregated.forEach(item => {
+            if (!groups[item.category]) groups[item.category] = [];
+            groups[item.category].push(item);
+          });
+          for (let group in groups) {
+            html += `<div class="search-results-section"><h4>${group}</h4>`;
+            groups[group].forEach(item => {
+              html += `<div class="search-item"><a href="${item.link}" target="_blank">${item.name}</a></div>`;
+            });
+            html += `</div>`;
+          }
+        }
+      }
+      searchResults.innerHTML = html;
+    }
+    
+    // Open search tab: hide main options and global search, show search tab with its own search bar
+    function openSearchTab() {
+      searchTab.classList.add('open');
+      document.getElementById('chatbotOptions').style.display = 'none';
+      document.getElementById('globalSearchContainer').style.display = 'none';
+      if (activeCategory) {
+        renderCategoryResources(activeCategory);
+        searchTabInput.setAttribute('placeholder', `Search in ${activeCategory}...`);
+      } else {
+        renderAggregatedResources();
+        searchTabInput.setAttribute('placeholder', 'Search...');
+      }
+    }
+    
+    // Close search tab: go back to main options and global search bar
+    function closeSearchTab() {
+      searchTab.classList.remove('open');
+      document.getElementById('chatbotOptions').style.display = 'flex';
+      document.getElementById('globalSearchContainer').style.display = 'block';
+      searchTabInput.value = '';
+      if (activeCategory) {
+        renderCategoryResources(activeCategory);
+      } else {
+        renderAggregatedResources();
+      }
+    }
+    
+    // Event listener for global search bar click to open search tab
+    searchBar.addEventListener('click', () => {
+      openSearchTab();
+    });
+    
+    // Event listener for search input in search tab
+    searchTabInput.addEventListener('input', () => {
+      const query = searchTabInput.value.trim();
+      if (activeCategory) {
+        filterAndRenderResults(activeCategory, query);
+      } else {
+        filterAndRenderResults(null, query);
+      }
+    });
+    
+    // Add event listeners to main option containers
     optionContainers.forEach(container => {
       const mainButton = container.querySelector('.main-option');
       const subOptions = container.querySelector('.sub-options');
       const arrow = mainButton.querySelector('.arrow');
       
       mainButton.addEventListener('click', () => {
-        // Move chosen container to top and mark as active
         optionsParent.prepend(container);
         container.classList.add('active');
-        // Hide other containers
         optionContainers.forEach(otherContainer => {
           if (otherContainer !== container) {
             otherContainer.classList.add('hidden');
           }
         });
-        // Update search bar placeholder
         const placeholder = container.getAttribute('data-placeholder');
         searchBar.setAttribute('placeholder', placeholder);
-        // Expand sub-options and rotate arrow
+        if (placeholder.toLowerCase().includes('forms')) {
+          activeCategory = 'forms';
+        } else if (placeholder.toLowerCase().includes('templates')) {
+          activeCategory = 'templates';
+        } else if (placeholder.toLowerCase().includes('tools')) {
+          activeCategory = 'tools';
+        } else {
+          activeCategory = null;
+        }
         subOptions.classList.add('open');
         arrow.classList.add('rotated');
-        // For tools category, show the tools-section and render tools
-        if (placeholder === 'Search for tools') {
+        if (activeCategory === 'tools') {
           const toolsSection = container.querySelector('.tools-section');
           toolsSection.classList.add('open');
           renderTools();
+        } else if (activeCategory === 'forms') {
+          const formsSection = container.querySelector('.forms-section');
+          formsSection.classList.add('open');
+          renderForms();
+        } else if (activeCategory === 'templates') {
+          const templatesSection = container.querySelector('.templates-section');
+          templatesSection.classList.add('open');
+          renderTemplates();
         }
       });
       
-      // Back button event listener
       const backButton = container.querySelector('.back-button');
       if (backButton) {
         backButton.addEventListener('click', (e) => {
           e.stopPropagation();
+          const subOptions = container.querySelector('.sub-options');
           subOptions.classList.remove('open');
+          const arrow = container.querySelector('.arrow');
           arrow.classList.remove('rotated');
           container.classList.remove('active');
-          // Hide tools-section if present
           const toolsSection = container.querySelector('.tools-section');
-          if (toolsSection) {
-            toolsSection.classList.remove('open');
-          }
-          // Hide video container if present
-          const videoContainer = container.querySelector('.video-container');
-          if (videoContainer) {
-            videoContainer.classList.remove('open');
-          }
+          if (toolsSection) { toolsSection.classList.remove('open'); }
+          const formsSection = container.querySelector('.forms-section');
+          if (formsSection) { formsSection.classList.remove('open'); }
+          const templatesSection = container.querySelector('.templates-section');
+          if (templatesSection) { templatesSection.classList.remove('open'); }
           optionContainers.forEach(otherContainer => {
             otherContainer.classList.remove('hidden');
           });
           searchBar.setAttribute('placeholder', 'Search...');
+          activeCategory = null;
         });
       }
       
-      // For the tools category, add event listener to "Watch Video" sub-option
-      if (container.getAttribute('data-placeholder') === 'Search for tools') {
-        // Assume the first sub-option is "Watch Video"
+      // For each sub-option, if the text contains "look for", add an event listener to open the search tab.
+      container.querySelectorAll('.sub-option').forEach(subOption => {
+        if (subOption.textContent.trim().toLowerCase().includes("look for")) {
+          subOption.addEventListener('click', function(e) {
+            e.stopPropagation();
+            // Ensure activeCategory is set based on container's data-placeholder if not already set.
+            const placeholder = container.getAttribute('data-placeholder');
+            if (placeholder.toLowerCase().includes('forms')) {
+              activeCategory = 'forms';
+            } else if (placeholder.toLowerCase().includes('templates')) {
+              activeCategory = 'templates';
+            } else if (placeholder.toLowerCase().includes('tools')) {
+              activeCategory = 'tools';
+            }
+            openSearchTab();
+          });
+        }
+      });
+      
+      // For Tools option: add event listener to "Watch Video" sub-option to show video container
+      if (container.getAttribute('data-placeholder').toLowerCase().includes('tools')) {
         const watchVideoButton = container.querySelectorAll('.sub-option')[0];
         if (watchVideoButton && watchVideoButton.textContent.trim() === 'Watch Video') {
           watchVideoButton.addEventListener('click', (e) => {
             e.stopPropagation();
-            // Hide sub-options container
             subOptions.classList.remove('open');
-            // Show video container
             const videoContainer = container.querySelector('.video-container');
             videoContainer.classList.add('open');
           });
@@ -599,14 +942,14 @@
       }
     });
     
-    // Filter tools if active on search input
-    searchBar.addEventListener('input', () => {
-      const activeContainer = document.querySelector('.option-container.active[data-placeholder="Search for tools"]');
-      if (activeContainer) {
-        renderTools(searchBar.value);
+    // Close video container when user clicks the close button
+    function closeVideo(e) {
+      e.stopPropagation();
+      const videoContainer = e.target.closest('.video-container');
+      if (videoContainer) {
+        videoContainer.classList.remove('open');
       }
-    });
+    }
   </script>
-  
 </body>
 </html>
