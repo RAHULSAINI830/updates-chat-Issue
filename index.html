@@ -2,530 +2,611 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Enhanced Chatbot Widget with Video & Persistent Back to Menu</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Enhanced Chatbot Widget</title>
+  <!-- Import a modern font from Google Fonts -->
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,500&display=swap" rel="stylesheet">
   <style>
-    /* Main container fixed in the bottom-right corner; responsive adjustments */
-    #chatbot-widget {
+    body {
+      font-family: 'Roboto', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f9f9f9;
+    }
+    /* Floating chat icon */
+    .chatbot-icon {
       position: fixed;
       bottom: 20px;
       right: 20px;
-      font-family: 'Helvetica Neue', Arial, sans-serif;
-      z-index: 1000;
-      width: 420px;
-      pointer-events: none;
-    }
-    @media (max-width: 480px) {
-      #chatbot-widget {
-        width: 90%;
-        right: 5%;
-        bottom: 10px;
-      }
-      .chatbot-window {
-        width: 100%;
-        height: 70vh;
-      }
-    }
-    /* Initial popup message */
-    #initial-popup {
-      position: absolute;
-      bottom: 10px;
-      right: 70px;
-      background: #4a90e2;
-      color: #fff;
-      padding: 10px 15px;
-      border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-      pointer-events: auto;
-      animation: fadeIn 0.5s ease;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    /* Always-visible chat icon */
-    .chatbot-icon {
       width: 60px;
       height: 60px;
-      background: linear-gradient(145deg, #4a90e2, #357ab7);
+      background-color: #ee5566;
       border-radius: 50%;
+      cursor: pointer;
+      z-index: 1000;
       display: flex;
       align-items: center;
       justify-content: center;
-      cursor: pointer;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-      pointer-events: auto;
-      position: absolute;
-      bottom: 0;
-      right: 0;
-    }
-    /* Notification badge */
-    #chat-badge {
-      position: absolute;
-      top: -5px;
-      right: -5px;
-      background: #ff5c5c;
       color: #fff;
-      font-size: 10px;
-      padding: 2px 6px;
-      border-radius: 12px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+      font-size: 30px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
-    /* Chat window styling */
+    .chatbot-icon:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+    }
+    /* Notification bubble */
+    .chatbot-notification {
+      position: fixed;
+      bottom: 30px;
+      right: 90px;
+      background-color: #ee5566;
+      color: #fff;
+      padding: 10px 15px;
+      border-radius: 20px;
+      font-size: 14px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      animation: fadeIn 0.5s ease;
+      z-index: 999;
+    }
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateX(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+    /* Chat window container */
     .chatbot-window {
-      position: absolute;
+      position: fixed;
       bottom: 90px;
-      right: 0;
-      width: 400px;
-      height: 600px;
-      background: #fff;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-      display: flex;
-      flex-direction: column;
+      right: 20px;
+      width: 450px;
+      height: 800px;
+      background-color: #fff;
+      border: none;
+      border-radius: 12px;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+      z-index: 1000;
       overflow: hidden;
-      pointer-events: auto;
       opacity: 0;
       transform: translateY(20px);
-      transition: opacity 0.3s ease, transform 0.3s ease;
+      pointer-events: none;
+      transition: opacity 0.4s ease, transform 0.4s ease, width 0.4s ease,
+                  height 0.4s ease, bottom 0.4s ease, right 0.4s ease;
     }
     .chatbot-window.open {
       opacity: 1;
       transform: translateY(0);
+      pointer-events: auto;
     }
-    /* Chat header with additional Menu and Clear Chat buttons */
+    .chatbot-window.maximized {
+      width: 40%;
+      height: 90%;
+      bottom: 5%;
+      right: 5%;
+    }
+    /* Chat window header */
     .chatbot-header {
-      background: linear-gradient(145deg, #4a90e2, #357ab7);
+      background-color: #ee5566;
       color: #fff;
-      padding: 12px;
-      text-align: center;
-      font-size: 1.2em;
+      padding: 15px 10px;
       position: relative;
       display: flex;
-      justify-content: space-between;
       align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
-    .chatbot-header button {
-      font-size: 1.2em;
-      cursor: pointer;
-      color: #fff;
+    .bot-header-content {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .avatar {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+    }
+    .bot-text {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.2;
+    }
+    .bot-name {
+      font-size: 18px;
+      font-weight: 500;
+    }
+    .bot-tagline {
+      font-size: 12px;
+      color: #f5f5f5;
+    }
+    .maximize-button {
       background: transparent;
       border: none;
-      margin-left: 10px;
+      color: #fff;
+      font-size: 18px;
+      cursor: pointer;
+      transition: color 0.3s ease;
     }
-    /* Scrollable messages area */
-    .chatbot-messages {
-      flex: 1;
-      padding: 10px;
+    .maximize-button:hover {
+      color: #f5f5f5;
+    }
+    /* Chat window body */
+    .chatbot-body {
+      padding: 15px;
+      height: calc(100% - 60px);
       overflow-y: auto;
-      background: #f9f9f9;
-    }
-    /* Inline options container */
-    .chatbot-options {
-      margin-top: 5px;
-      text-align: center;
-    }
-    .chatbot-options button {
-      background: linear-gradient(145deg, #4a90e2, #357ab7);
-      border: none;
-      color: #fff;
-      padding: 8px 12px;
-      margin: 5px 3px;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: background 0.3s ease;
-    }
-    .chatbot-options button:hover {
-      background: #357ab7;
-    }
-    /* Feedback area */
-    .chatbot-feedback {
-      padding: 10px;
-      background: #f1f1f1;
-      border-top: 1px solid #ddd;
-      text-align: center;
-    }
-    .feedback-btn {
-      background: #7ed321;
-      border: none;
-      color: #fff;
-      padding: 8px 12px;
-      margin: 5px;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: background 0.3s ease;
-    }
-    .feedback-btn:hover {
-      background: #6bb41a;
-    }
-    /* Message bubble styles */
-    .message {
-      display: flex;
-      margin-bottom: 10px;
-      align-items: flex-end;
-    }
-    .message.bot {
-      justify-content: flex-start;
-    }
-    .message.user {
-      justify-content: flex-end;
-    }
-    .message .icon {
-      width: 32px;
-      height: 32px;
-      flex-shrink: 0;
-    }
-    .message.bot .icon {
-      margin-right: 8px;
-    }
-    .message.user .icon {
-      margin-left: 8px;
-    }
-    .bubble {
-      max-width: 70%;
-      padding: 10px;
-      border-radius: 15px;
-      font-size: 0.95em;
-      line-height: 1.3;
-      word-wrap: break-word;
-      overflow-wrap: break-word;
-      white-space: pre-wrap;
-      background: #e9efff;
-      border: 1px solid #c3d0ea;
+      font-size: 16px;
+      line-height: 1.5;
       color: #333;
     }
-    .message.user .bubble {
-      background: #ee5566;
-      border: 1px solid #cc4455;
-      color: #fff;
+    .chatbot-body::-webkit-scrollbar {
+      width: 8px;
+    }
+    .chatbot-body::-webkit-scrollbar-thumb {
+      background-color: rgba(0,0,0,0.2);
+      border-radius: 4px;
+    }
+    /* Search bar container (always visible) */
+    .search-container {
+      padding: 15px 15px 20px 0;
+    }
+    .search-input-wrapper {
+      position: relative;
+    }
+    .search-input-wrapper input {
+      width: 90%;
+      padding: 10px 10px 10px 40px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    .search-icon {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 18px;
+      color: #888;
+    }
+    /* Options accordion styling */
+    .chatbot-options {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    /* Each main option as a card */
+    .option-container {
+      border: 2px solid #f0f0f0;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #fff;
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+    .hidden {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(20px);
+    }
+    .main-option {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 15px 20px;
+      font-size: 16px;
+      color: #333;
+      cursor: pointer;
+      background: #fff;
+      border: none;
+      width: 100%;
+      text-align: left;
+      transition: background-color 0.2s ease, transform 0.2s ease,
+                  box-shadow 0.2s ease;
+    }
+    .main-option:hover {
+      background-color: #f6f6f6;
+      transform: translateY(-2px);
+      box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    .option-icon {
+      margin-right: 10px;
+      font-size: 20px;
+    }
+    .arrow {
+      transition: transform 0.3s ease;
+    }
+    .arrow.rotated {
+      transform: rotate(90deg);
+    }
+    /* Sub-options accordion */
+    .sub-options {
+      max-height: 0;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 0 20px;
+      background: #fafafa;
+      transition: max-height 0.4s ease, opacity 0.4s ease;
+      opacity: 0;
+    }
+    .sub-options.open {
+      max-height: 300px;
+      opacity: 1;
+      padding-bottom: 15px;
+    }
+    .sub-option {
+      padding: 10px 15px;
+      font-size: 14px;
+      color: #555;
+      background: #fff;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.2s ease, transform 0.2s ease;
+      text-align: left;
+    }
+    .sub-option:hover {
+      background-color: #f0f0f0;
+      transform: translateX(5px);
+    }
+    /* Icon back button instead of text */
+    .back-button {
+      background: transparent;
+      border: none;
+      color: #ee5566;
+      font-size: 18px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      text-align: left;
+    }
+    .back-button:hover {
+      color: #cc4455;
+    }
+    /* Separate Popular Tools Section */
+    .tools-section {
+      display: none; /* Hide initially */
+      background: #f0f4f8;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      margin: 15px 20px 20px;
+      transition: max-height 0.4s ease, opacity 0.4s ease;
+      max-height: 0;
+      overflow: hidden;
+      opacity: 0;
+    }
+    .tools-section.open {
+      display: block;
+      max-height: 400px;
+      opacity: 1;
+    }
+    .tools-section h4 {
+      margin: 0 0 15px;
+      font-size: 18px;
+      color: #333;
+      font-weight: 500;
+    }
+    .tools-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+    .tool-item {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      padding: 15px;
+      flex: 1 1 calc(50% - 15px);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .tool-item:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    }
+    .tool-item a {
+      text-decoration: none;
+      color: #333;
+      font-size: 16px;
+      text-align: center;
+      width: 100%;
+    }
+    /* Video Container for "Watch Video" option */
+    .video-container {
+      display: none;
+      margin: 15px 20px;
+    }
+    .video-container.open {
+      display: block;
+    }
+    .video-container iframe {
+      width: 100%;
+      height: 250px;
+      border: none;
+      border-radius: 8px;
     }
   </style>
 </head>
 <body>
-  <div id="chatbot-widget" aria-live="polite">
-    <!-- Initial popup -->
-    <div id="initial-popup" role="alert">
-      Hi! I’ll assist you with your issues.
-    </div>
-    <!-- Always-visible chat icon -->
-    <div class="chatbot-icon" id="chatbot-icon" aria-label="Open Chat">
-      <svg width="32" height="32" viewBox="0 0 24 24" fill="#fff" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 2a2 2 0 00-2 2v1H6a2 2 0 00-2 2v3h16V7a2 2 0 00-2-2h-4V4a2 2 0 00-2-2zm-6 9v6a2 2 0 002 2h12a2 2 0 002-2v-6H6zm5 3a1 1 0 112 0 1 1 0 11-2 0zm6 0a1 1 0 112 0 1 1 0 11-2 0z"/>
-      </svg>
-      <span id="chat-badge">1 new</span>
-    </div>
-    <!-- Chat window -->
-    <div class="chatbot-window" id="chatbot-window" role="dialog" aria-modal="true" aria-label="Chat window">
-      <div class="chatbot-header">
-        <span>ChatBot</span>
-        <div>
-          
-          <button id="chatbot-clear" title="Clear Chat">&#128465;</button>
-          <button id="chatbot-close" title="Close Chat">&times;</button>
+
+  <!-- Notification bubble -->
+  <div class="chatbot-notification" id="chatbotNotification">
+    Hey, how can I help you today?
+  </div>
+
+  <!-- Floating chat icon -->
+  <div class="chatbot-icon" onclick="toggleChatbot()">💬</div>
+
+  <!-- Chat window -->
+  <div class="chatbot-window" id="chatbotWindow">
+    <div class="chatbot-header">
+      <div class="bot-header-content">
+        <img class="avatar" src="https://img.freepik.com/free-vector/graident-ai-robot-vectorart_78370-4114.jpg" alt="Avatar">
+        <div class="bot-text">
+          <div class="bot-name">Zen Bot</div>
+          <div class="bot-tagline">Your Virtual Assistance</div>
         </div>
       </div>
-      <div id="messages" class="chatbot-messages"></div>
-      <div id="chatbot-feedback" class="chatbot-feedback" style="display: none;">
-        <p>Was this helpful?</p>
-        <button id="feedback-yes" class="feedback-btn">Yes</button>
-        <button id="feedback-no" class="feedback-btn">No</button>
+      <button class="maximize-button" onclick="toggleMaximize(event)">⛶</button>
+    </div>
+    <div class="chatbot-body">
+      <!-- Search bar always visible -->
+      <div class="search-container">
+        <div class="search-input-wrapper">
+          <input type="text" id="searchBar" placeholder="Search..." />
+          <span class="search-icon">&#128269;</span>
+        </div>
+      </div>
+      <div class="chatbot-options">
+        <!-- Option 1 -->
+        <div class="option-container" data-placeholder="Search ZenTrades">
+          <button class="main-option">
+            <span class="option-icon">🚀</span>
+            <span class="option-text">Get started with ZenTrades (all verticals)</span>
+            <span class="arrow">></span>
+          </button>
+          <div class="sub-options">
+            <button class="back-button">&#8592;</button>
+            <button class="sub-option">Watch supademo</button>
+            <button class="sub-option">Submit demo request</button>
+            <button class="sub-option">Talk to customer support</button>
+          </div>
+        </div>
+        <!-- Option 2 -->
+        <div class="option-container" data-placeholder="Search for forms">
+          <button class="main-option">
+            <span class="option-icon">📝</span>
+            <span class="option-text">How to use our form builder</span>
+            <span class="arrow">></span>
+          </button>
+          <div class="sub-options">
+            <button class="back-button">&#8592;</button>
+            <button class="sub-option">Watch Video</button>
+            <button class="sub-option">Chat with support</button>
+            <button class="sub-option">Look for forms</button>
+          </div>
+        </div>
+        <!-- Option 3 -->
+        <div class="option-container" data-placeholder="Search for invoices">
+          <button class="main-option">
+            <span class="option-icon">📄</span>
+            <span class="option-text">How to use our invoice builder</span>
+            <span class="arrow">></span>
+          </button>
+          <div class="sub-options">
+            <button class="back-button">&#8592;</button>
+            <button class="sub-option">Watch Video</button>
+            <button class="sub-option">Chat with support</button>
+            <button class="sub-option">Create invoices now</button>
+          </div>
+        </div>
+        <!-- Option 4 -->
+        <div class="option-container" data-placeholder="Search for checklists">
+          <button class="main-option">
+            <span class="option-icon">☑️</span>
+            <span class="option-text">How to use our checklists</span>
+            <span class="arrow">></span>
+          </button>
+          <div class="sub-options">
+            <button class="back-button">&#8592;</button>
+            <button class="sub-option">Watch Video - how to download</button>
+            <button class="sub-option">Chat with support</button>
+            <button class="sub-option">Look for checklists</button>
+          </div>
+        </div>
+        <!-- Option 5 -->
+        <div class="option-container" data-placeholder="Search for templates">
+          <button class="main-option">
+            <span class="option-icon">📑</span>
+            <span class="option-text">How to use our templates</span>
+            <span class="arrow">></span>
+          </button>
+          <div class="sub-options">
+            <button class="back-button">&#8592;</button>
+            <button class="sub-option">Watch Video</button>
+            <button class="sub-option">Chat with support</button>
+            <button class="sub-option">Look for templates</button>
+          </div>
+        </div>
+        <!-- Option 6: How to use our tools -->
+        <div class="option-container" data-placeholder="Search for tools">
+          <button class="main-option">
+            <span class="option-icon">🛠️</span>
+            <span class="option-text">How to use our tools</span>
+            <span class="arrow">></span>
+          </button>
+          <!-- Sub-options container for Option 6 -->
+          <div class="sub-options">
+            <button class="back-button">&#8592;</button>
+            <button class="sub-option">Watch Video</button>
+            <button class="sub-option">Chat with support</button>
+            <button class="sub-option">Look for templates</button>
+          </div>
+          <!-- Separate Video Container -->
+          <div class="video-container">
+            <iframe src="https://www.youtube.com/embed/o99EznX3ABw?si=rNQ3IfO8C6t3lwOS" title="YouTube video player" frameborder="0" allowfullscreen></iframe>
+          </div>
+          <!-- Separate Popular Tools Section container (initially hidden) -->
+          <div class="tools-section">
+            <h4>Popular Tools</h4>
+            <div class="tools-list"></div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
   <script>
-    (function() {
-      'use strict';
-      
-      let chatHistory = [];
-      
-      // Load chat history from localStorage
-      function loadChatHistory() {
-        const stored = localStorage.getItem('chatHistory');
-        if (stored) {
-          chatHistory = JSON.parse(stored);
-          chatHistory.forEach(message => {
-            if (message.type === "video") {
-              openVideo(message.videoUrl, false);
-            } else if (message.type === "backToMenu") {
-              displayBackToMenu();
-            } else {
-              addMessageToDOM(message.side, message.text);
-            }
-          });
-        }
+    // Global array of tool objects
+    const tools = [
+      { name: 'Flow rate calculator', link: 'https://resource.zentrades.pro/tools/flow-rate-calculator' },
+      { name: 'Pipe volume calculator', link: 'https://resource.zentrades.pro/tools/pipe-volume-calculator' },
+      { name: 'Estimate Generator', link: 'https://resource.zentrades.pro/tools/estimate-generator' },
+      { name: 'Before-After Image Generator', link: 'https://resource.zentrades.pro/tools/before-after-image' },
+      { name: 'Service Price Calculator', link: 'https://resource.zentrades.pro/tools/service-prize-calculator' },
+      { name: 'HVAC Load Calculator', link: 'https://resource.zentrades.pro/tools/hvac-load-calculator' },
+      { name: 'HVAC CFM Calculator', link: 'https://resource.zentrades.pro/tools/hvac-cfm-calculator' },
+      { name: 'HVAC Duct CFM', link: 'https://resources.zentrades.pro/tools/hvac-duct-cfm-calculator' },
+      { name: 'Margin Calculator', link: 'https://resources.zentrades.pro/tools/margin-calculator' },
+      { name: 'HVAC Labor rate calculator', link: 'https://resource.zentrades.pro/tools/hvac-labor-rate-calculator' },
+      { name: 'Refrigeration BTU Calculator', link: 'https://resource.zentrades.pro/tools/refigarator-btu-calculator' },
+      { name: 'ACH Calculator', link: 'https://resource.zentrades.pro/tools/ach-calculator' },
+      { name: 'General Parts Markup Calculator', link: 'https://resource.zentrades.pro/tools/general-parts-markup' },
+      { name: 'Sprinkler Velocity Calculator', link: 'https://resource.zentrades.pro/tools/sprinkler-velocity-calculator' },
+      { name: 'SEER Energy Savings Calculator', link: 'https://resource.zentrades.pro/tools/seer-energy' }
+    ];
+    
+    // Toggle chat window open/close
+    function toggleChatbot() {
+      const chatbotWindow = document.getElementById('chatbotWindow');
+      const notification = document.getElementById('chatbotNotification');
+      chatbotWindow.classList.toggle('open');
+      if (chatbotWindow.classList.contains('open')) {
+        notification.style.display = 'none';
+      } else {
+        notification.style.display = 'block';
       }
-      
-      // Save chat history to localStorage
-      function saveChatHistory() {
-        localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
+    }
+    
+    // Toggle maximize view
+    function toggleMaximize(event) {
+      event.stopPropagation();
+      const chatbotWindow = document.getElementById('chatbotWindow');
+      chatbotWindow.classList.toggle('maximized');
+    }
+    
+    // Get all option containers and parent container
+    const optionContainers = document.querySelectorAll('.option-container');
+    const optionsParent = document.querySelector('.chatbot-options');
+    const searchBar = document.getElementById('searchBar');
+    
+    // Function to render the tools list into the tools-section
+    function renderTools(query = '') {
+      const activeContainer = document.querySelector('.option-container.active[data-placeholder="Search for tools"]');
+      if (!activeContainer) return;
+      const toolsListContainer = activeContainer.querySelector('.tools-section .tools-list');
+      let filtered = tools;
+      if (query.trim() !== '') {
+        filtered = tools.filter(tool => tool.name.toLowerCase().includes(query.toLowerCase()));
+      } else {
+        filtered = tools.slice(0, 5);
       }
-      
-      // Append a message (updates DOM and history)
-      function addMessage(side, text, type = "text", extra = {}) {
-        if (type === "text") {
-          addMessageToDOM(side, text);
-          chatHistory.push({ side, text, type });
-        } else if (type === "video") {
-          openVideo(extra.videoUrl);
-          chatHistory.push({ side: "bot", text: "", type, videoUrl: extra.videoUrl });
-        } else if (type === "backToMenu") {
-          displayBackToMenu();
-          chatHistory.push({ type });
-        }
-        saveChatHistory();
-      }
-      
-      // Create and append a text message in the DOM
-      function addMessageToDOM(side, text) {
-        const messagesContainer = document.getElementById("messages");
-        const messageDiv = document.createElement("div");
-        messageDiv.classList.add("message", side);
-        
-        const iconDiv = document.createElement("div");
-        iconDiv.classList.add("icon");
-        if (side === "bot") {
-          iconDiv.innerHTML = `
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="#4a90e2" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 2a2 2 0 00-2 2v1H6a2 2 0 00-2 2v3h16V7a2 2 0 00-2-2h-4V4a2 2 0 00-2-2zm-6 9v6a2 2 0 002 2h12a2 2 0 002-2v-6H6zm5 3a1 1 0 112 0 1 1 0 11-2 0zm6 0a1 1 0 112 0 1 1 0 11-2 0z"/>
-            </svg>`;
-        } else {
-          iconDiv.innerHTML = `
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="#ee5566" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 2a5 5 0 00-5 5v2a5 5 0 0010 0V7a5 5 0 00-5-5zm0 10c-3.33 0-10 1.67-10 5v3h20v-3c0-3.33-6.67-5-10-5z"/>
-            </svg>`;
-        }
-        
-        const bubbleDiv = document.createElement("div");
-        bubbleDiv.classList.add("bubble");
-        bubbleDiv.textContent = text;
-        
-        if (side === "bot") {
-          messageDiv.appendChild(iconDiv);
-          messageDiv.appendChild(bubbleDiv);
-        } else {
-          messageDiv.appendChild(bubbleDiv);
-          messageDiv.appendChild(iconDiv);
-        }
-        
-        messagesContainer.appendChild(messageDiv);
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-      }
-      
-      // Open a video inside the chat window with no download option
-      function openVideo(videoUrl, addToHistory = true) {
-        const messagesContainer = document.getElementById("messages");
-        const videoDiv = document.createElement("div");
-        videoDiv.classList.add("message", "bot");
-        
-        const videoContainer = document.createElement("div");
-        videoContainer.classList.add("bubble");
-        videoContainer.style.padding = "0";
-        
-        const videoElement = document.createElement("video");
-        videoElement.src = videoUrl;
-        videoElement.controls = true;
-        videoElement.style.width = "100%";
-        videoElement.setAttribute("controlsList", "nodownload");
-        
-        videoContainer.appendChild(videoElement);
-        videoDiv.appendChild(videoContainer);
-        messagesContainer.appendChild(videoDiv);
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        
-        if (addToHistory) {
-          chatHistory.push({ side: "bot", text: "", type: "video", videoUrl });
-          saveChatHistory();
-        }
-      }
-      
-      // Display "Back to Menu" option (if added by the conversation tree)
-      function displayBackToMenu() {
-        const messagesContainer = document.getElementById("messages");
-        const optionsContainer = document.createElement("div");
-        optionsContainer.classList.add("chatbot-options");
-        const btn = document.createElement("button");
-        btn.textContent = "Back to Menu";
-        btn.addEventListener("click", () => {
-          optionsContainer.remove();
-          displayQuestion("qStart");
-        });
-        optionsContainer.appendChild(btn);
-        messagesContainer.appendChild(optionsContainer);
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-      }
-      
-      // Terminal node: thank-you message and persist Back to Menu option
-      function addBackToMenuMessage() {
-        setTimeout(() => {
-          addMessage("bot", "Thank you for chatting!");
-          addMessage(null, "", "backToMenu");
-        }, 500);
-      }
-      
-      // Display a question from the conversation tree
-      function displayQuestion(key) {
-        const questionObj = questions[key];
-        addMessage("bot", questionObj.text);
-        
-        const messagesContainer = document.getElementById("messages");
-        const optionsContainer = document.createElement("div");
-        optionsContainer.classList.add("chatbot-options");
-        
-        questionObj.options.forEach(option => {
-          const btn = document.createElement("button");
-          btn.textContent = option.text;
-          btn.addEventListener("click", () => {
-            optionsContainer.remove();
-            if (option.text === "Back to Menu") {
-              displayQuestion("qStart");
-              return;
-            }
-            addMessage("user", option.text);
-            if (option.videoUrl) {
-              openVideo(option.videoUrl);
-            }
-            if (option.next && option.next.length > 0) {
-              setTimeout(() => displayQuestion(option.next[0]), 500);
-            } else {
-              addBackToMenuMessage();
-            }
-          });
-          optionsContainer.appendChild(btn);
-        });
-        messagesContainer.appendChild(optionsContainer);
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-      }
-      
-      // Conversation tree definition
-      const questions = {
-        qStart: {
-          text: "How can we help you today?",
-          options: [
-            { text: "Get started with ZenTrades (all verticals)", next: ["q1"] },
-            { text: "How to use our form builder", next: ["q2"] },
-            { text: "How to use our invoice builder", next: ["q3"] },
-            { text: "How to use our checklists", next: ["q4"] },
-            { text: "How to use our templates", next: ["q5"] },
-            { text: "How to use our tools", next: ["q6"] }
-          ]
-        },
-        q1: {
-          text: "Get started with ZenTrades (all verticals)",
-          options: [
-            { text: "Watch supademo", videoUrl: "supademo.mp4", next: [] },
-            { text: "Submit demo request", next: [] },
-            { text: "Talk to customer support", next: [] },
-            { text: "Back to Menu", next: ["qStart"] }
-          ]
-        },
-        q2: {
-          text: "How to use our form builder",
-          options: [
-            { text: "Watch Video", videoUrl: "formbuilder_video.mp4", next: [] },
-            { text: "Chat with support", next: [] },
-            { text: "Look for forms", next: [] },
-            { text: "Back to Menu", next: ["qStart"] }
-          ]
-        },
-        q3: {
-          text: "How to use our invoice builder",
-          options: [
-            { text: "Watch Video", videoUrl: "invoicebuilder_video.mp4", next: [] },
-            { text: "Chat with support", next: [] },
-            { text: "Create invoices now", next: [] },
-            { text: "Back to Menu", next: ["qStart"] }
-          ]
-        },
-        q4: {
-          text: "How to use our checklists",
-          options: [
-            { text: "Watch Video - how to download", videoUrl: "checklist_video.mp4", next: [] },
-            { text: "Chat with support", next: [] },
-            { text: "Look for checklists", next: [] },
-            { text: "Back to Menu", next: ["qStart"] }
-          ]
-        },
-        q5: {
-          text: "How to use our templates",
-          options: [
-            { text: "Watch Video", videoUrl: "templates_video.mp4", next: [] },
-            { text: "Chat with support", next: [] },
-            { text: "Look for templates", next: [] },
-            { text: "Back to Menu", next: ["qStart"] }
-          ]
-        },
-        q6: {
-          text: "How to use our tools",
-          options: [
-            { text: "Watch Video", videoUrl: "tools_video.mp4", next: [] },
-            { text: "Chat with support", next: [] },
-            { text: "Look for templates", next: [] },
-            { text: "Back to Menu", next: ["qStart"] }
-          ]
-        }
-      };
-      
-      // Initialize on DOMContentLoaded
-      document.addEventListener("DOMContentLoaded", () => {
-        loadChatHistory();
-        
-        const chatWindow = document.getElementById("chatbot-window");
-        const chatIcon = document.getElementById("chatbot-icon");
-        const chatClose = document.getElementById("chatbot-close");
-        const chatClear = document.getElementById("chatbot-clear");
-        const chatMenu = document.getElementById("chatbot-menu");
-        const initialPopup = document.getElementById("initial-popup");
-        const chatBadge = document.getElementById("chat-badge");
-        
-        // Open chat window on icon click; if no history, show main menu
-        chatIcon.addEventListener("click", () => {
-          if (!chatWindow.classList.contains("open")) {
-            chatWindow.classList.add("open");
-            if (initialPopup) { initialPopup.style.display = "none"; }
-            if (chatBadge) { chatBadge.style.display = "none"; }
-            if (chatHistory.length === 0) {
-              displayQuestion("qStart");
-            }
-          } else {
-            chatWindow.classList.remove("open");
-          }
-        });
-        
-        chatClose.addEventListener("click", () => {
-          chatWindow.classList.remove("open");
-        });
-        
-        // Clear Chat resets conversation history and shows main menu
-        chatClear.addEventListener("click", () => {
-          if (confirm("Clear chat history?")) {
-            chatHistory = [];
-            localStorage.removeItem('chatHistory');
-            document.getElementById("messages").innerHTML = "";
-            displayQuestion("qStart");
-          }
-        });
-        
-        // Persistent Menu button to always show main menu options
-        chatMenu.addEventListener("click", () => {
-          // Remove any existing options containers before re-displaying the main menu
-          document.querySelectorAll('.chatbot-options').forEach(el => el.remove());
-          displayQuestion("qStart");
-        });
-        
-        document.getElementById("feedback-yes").addEventListener("click", () => {
-          const feedbackDiv = document.getElementById("chatbot-feedback");
-          feedbackDiv.innerHTML = "<p>Thank you for your positive feedback!</p>";
-          setTimeout(() => feedbackDiv.style.display = "none", 2000);
-        });
-        document.getElementById("feedback-no").addEventListener("click", () => {
-          const feedbackDiv = document.getElementById("chatbot-feedback");
-          feedbackDiv.innerHTML = "<p>We're sorry to hear that. We'll strive to improve.</p>";
-          setTimeout(() => feedbackDiv.style.display = "none", 2000);
-        });
+      toolsListContainer.innerHTML = '';
+      filtered.forEach(tool => {
+        const div = document.createElement('div');
+        div.classList.add('tool-item');
+        div.innerHTML = `<a href="${tool.link}" target="_blank">${tool.name}</a>`;
+        toolsListContainer.appendChild(div);
       });
-    })();
+    }
+    
+    // Add event listeners to main options
+    optionContainers.forEach(container => {
+      const mainButton = container.querySelector('.main-option');
+      const subOptions = container.querySelector('.sub-options');
+      const arrow = mainButton.querySelector('.arrow');
+      
+      mainButton.addEventListener('click', () => {
+        // Move chosen container to top and mark as active
+        optionsParent.prepend(container);
+        container.classList.add('active');
+        // Hide other containers
+        optionContainers.forEach(otherContainer => {
+          if (otherContainer !== container) {
+            otherContainer.classList.add('hidden');
+          }
+        });
+        // Update search bar placeholder
+        const placeholder = container.getAttribute('data-placeholder');
+        searchBar.setAttribute('placeholder', placeholder);
+        // Expand sub-options and rotate arrow
+        subOptions.classList.add('open');
+        arrow.classList.add('rotated');
+        // For tools category, show the tools-section and render tools
+        if (placeholder === 'Search for tools') {
+          const toolsSection = container.querySelector('.tools-section');
+          toolsSection.classList.add('open');
+          renderTools();
+        }
+      });
+      
+      // Back button event listener
+      const backButton = container.querySelector('.back-button');
+      if (backButton) {
+        backButton.addEventListener('click', (e) => {
+          e.stopPropagation();
+          subOptions.classList.remove('open');
+          arrow.classList.remove('rotated');
+          container.classList.remove('active');
+          // Hide tools-section if present
+          const toolsSection = container.querySelector('.tools-section');
+          if (toolsSection) {
+            toolsSection.classList.remove('open');
+          }
+          // Hide video container if present
+          const videoContainer = container.querySelector('.video-container');
+          if (videoContainer) {
+            videoContainer.classList.remove('open');
+          }
+          optionContainers.forEach(otherContainer => {
+            otherContainer.classList.remove('hidden');
+          });
+          searchBar.setAttribute('placeholder', 'Search...');
+        });
+      }
+      
+      // For the tools category, add event listener to "Watch Video" sub-option
+      if (container.getAttribute('data-placeholder') === 'Search for tools') {
+        // Assume the first sub-option is "Watch Video"
+        const watchVideoButton = container.querySelectorAll('.sub-option')[0];
+        if (watchVideoButton && watchVideoButton.textContent.trim() === 'Watch Video') {
+          watchVideoButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            // Hide sub-options container
+            subOptions.classList.remove('open');
+            // Show video container
+            const videoContainer = container.querySelector('.video-container');
+            videoContainer.classList.add('open');
+          });
+        }
+      }
+    });
+    
+    // Filter tools if active on search input
+    searchBar.addEventListener('input', () => {
+      const activeContainer = document.querySelector('.option-container.active[data-placeholder="Search for tools"]');
+      if (activeContainer) {
+        renderTools(searchBar.value);
+      }
+    });
   </script>
+  
 </body>
 </html>
