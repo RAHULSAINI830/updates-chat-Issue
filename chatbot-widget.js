@@ -1,233 +1,598 @@
 var ChatbotWidget = (function() {
-  // Initialize the widget within the provided container.
+  // Initialize the widget inside the provided container.
   function init(options) {
     var container = options.container || document.body;
+    // Insert the widget HTML structure into the container.
     container.innerHTML = `
-      <!-- Chatbot Notification -->
-      <div class="chatbot-notification" id="chatbotNotification">
-        Hey, how can I help you today?
-      </div>
-      <!-- Floating Chat Icon -->
-      <div class="chatbot-icon" onclick="ChatbotWidget.toggleChatbot()">💬</div>
-      <!-- Chat Window -->
-      <div class="chatbot-window" id="chatbotWindow">
-        <div class="chatbot-header">
-          <div class="bot-header-content">
-            <img class="avatar" src="https://img.freepik.com/free-vector/graident-ai-robot-vectorart_78370-4114.jpg" alt="Avatar">
-            <div class="bot-text">
-              <div class="bot-name">Zen Bot</div>
-              <div class="bot-tagline">Your Virtual Assistance</div>
-            </div>
-          </div>
-          <button class="maximize-button" onclick="ChatbotWidget.toggleMaximize(event)">⛶</button>
+  <!-- Notification bubble -->
+  <div class="chatbot-notification" id="chatbotNotification">
+    Hey, how can I help you today?
+  </div>
+  <!-- Floating chat icon -->
+  <div class="chatbot-icon" onclick="toggleChatbot()">💬</div>
+  <!-- Chat window -->
+  <div class="chatbot-window" id="chatbotWindow">
+    <div class="chatbot-header">
+      <div class="bot-header-content">
+        <img class="avatar" src="https://img.freepik.com/free-vector/graident-ai-robot-vectorart_78370-4114.jpg" alt="Avatar">
+        <div class="bot-text">
+          <div class="bot-name">Zen Bot</div>
+          <div class="bot-tagline">Your Virtual Assistance</div>
         </div>
-        <div class="chatbot-body">
-          <!-- Global Search Bar -->
-          <div class="search-container" id="globalSearchContainer">
-            <div class="search-input-wrapper">
-              <input type="text" id="searchBar" placeholder="Search..." />
-              <span class="search-icon">&#128269;</span>
-            </div>
+      </div>
+      <button class="maximize-button" onclick="toggleMaximize(event)">⛶</button>
+    </div>
+    <div class="chatbot-body">
+      <!-- Global Search bar in main view -->
+      <div class="search-container" id="globalSearchContainer">
+        <div class="search-input-wrapper">
+          <input type="text" id="searchBar" placeholder="Search..." />
+          <span class="search-icon">&#128269;</span>
+        </div>
+      </div>
+      <!-- Chatbot Options -->
+      <div class="chatbot-options" id="chatbotOptions">
+        <!-- Option 1: ZenTrades -->
+        <div class="option-container" data-placeholder="Search ZenTrades">
+          <button class="main-option">
+            <span class="option-icon">🚀</span>
+            <span class="option-text">Get started with ZenTrades (all verticals)</span>
+            <span class="arrow">></span>
+          </button>
+          <div class="sub-options">
+            <button class="back-button">&#8592;</button>
+            <button class="sub-option">Watch supademo</button>
+            <button class="sub-option">Submit demo request</button>
+            <button class="sub-option">Look to connect</button>
           </div>
-          <!-- Chatbot Options -->
-          <div class="chatbot-options" id="chatbotOptions">
-            <!-- Option 1: ZenTrades -->
-            <div class="option-container" data-placeholder="Search ZenTrades">
-              <button class="main-option">
-                <span class="option-icon">🚀</span>
-                <span class="option-text">Get started with ZenTrades (all verticals)</span>
-                <span class="arrow">></span>
-              </button>
-              <div class="sub-options">
-                <button class="back-button">&#8592;</button>
-                <button class="sub-option">Watch supademo</button>
-                <button class="sub-option">Submit demo request</button>
-                <button class="sub-option">Look to connect</button>
-              </div>
-            </div>
-            <!-- Option 2: Forms -->
-            <div class="option-container" data-placeholder="Search for forms">
-              <button class="main-option">
-                <span class="option-icon">📝</span>
-                <span class="option-text">How to use our form builder</span>
-                <span class="arrow">></span>
-              </button>
-              <div class="sub-options">
-                <button class="back-button">&#8592;</button>
-                <button class="sub-option">Watch Video</button>
-                <button class="sub-option">
-                  Contact with Support <span class="toggle-icon">►</span>
-                </button>
-                <button class="sub-option">Look for forms</button>
-              </div>
-              <div class="resource-section forms-section">
-                <h4>Popular Forms</h4>
-                <div class="resource-list forms-list"></div>
-              </div>
-            </div>
-            <!-- Option 3: Invoices -->
-            <div class="option-container" data-placeholder="Search for invoices">
-              <button class="main-option">
-                <span class="option-icon">📄</span>
-                <span class="option-text">How to use our invoice builder</span>
-                <span class="arrow">></span>
-              </button>
-              <div class="sub-options">
-                <button class="back-button">&#8592;</button>
-                <button class="sub-option">Watch Video</button>
-                <button class="sub-option">
-                  Contact with Support <span class="toggle-icon">►</span>
-                </button>
-                <button class="sub-option">Create invoices now</button>
-              </div>
-            </div>
-            <!-- Option 4: Checklists -->
-            <div class="option-container" data-placeholder="Search for checklists">
-              <button class="main-option">
-                <span class="option-icon">☑️</span>
-                <span class="option-text">How to use our checklists</span>
-                <span class="arrow">></span>
-              </button>
-              <div class="sub-options">
-                <button class="back-button">&#8592;</button>
-                <button class="sub-option">Watch Video - how to download</button>
-                <button class="sub-option">
-                  Contact with Support <span class="toggle-icon">►</span>
-                </button>
-                <button class="sub-option">Look for checklists</button>
-              </div>
-              <div class="resource-section checklists-section">
-                <h4>Popular Checklists</h4>
-                <div class="resource-list checklists-list"></div>
-              </div>
-            </div>
-            <!-- Option 5: Templates -->
-            <div class="option-container" data-placeholder="Search for templates">
-              <button class="main-option">
-                <span class="option-icon">📑</span>
-                <span class="option-text">How to use our templates</span>
-                <span class="arrow">></span>
-              </button>
-              <div class="sub-options">
-                <button class="back-button">&#8592;</button>
-                <button class="sub-option">Watch Video</button>
-                <button class="sub-option">
-                  Contact with Support <span class="toggle-icon">►</span>
-                </button>
-                <button class="sub-option">Look for templates</button>
-              </div>
-              <div class="resource-section templates-section">
-                <h4>Popular Templates</h4>
-                <div class="resource-list templates-list"></div>
-              </div>
-            </div>
-            <!-- Option 6: Tools -->
-            <div class="option-container" data-placeholder="Search for tools">
-              <button class="main-option">
-                <span class="option-icon">🛠️</span>
-                <span class="option-text">How to use our tools</span>
-                <span class="arrow">></span>
-              </button>
-              <div class="sub-options">
-                <button class="back-button">&#8592;</button>
-                <button class="sub-option">Watch Video</button>
-                <button class="sub-option">
-                  Contact with Support <span class="toggle-icon">►</span>
-                </button>
-                <button class="sub-option">Look for more Tools</button>
-              </div>
-              <div class="video-container">
-                <button class="close-video" onclick="ChatbotWidget.closeVideo(event)">Close Video</button>
-                <iframe src="https://www.youtube.com/embed/o99EznX3ABw?si=rNQ3IfO8C6t3lwOS" title="YouTube video player" frameborder="0" allowfullscreen></iframe>
-              </div>
-              <div class="resource-section tools-section">
-                <h4>Popular Tools</h4>
-                <div class="resource-list tools-list"></div>
-              </div>
-            </div>
+        </div>
+        <!-- Option 2: Forms -->
+        <div class="option-container" data-placeholder="Search for forms">
+          <button class="main-option">
+            <span class="option-icon">📝</span>
+            <span class="option-text">How to use our form builder</span>
+            <span class="arrow">></span>
+          </button>
+          <div class="sub-options">
+            <button class="back-button">&#8592;</button>
+            <button class="sub-option">Watch Video</button>
+            <button class="sub-option">Contact with Support <span class="toggle-icon">►</span></button>
+            <button class="sub-option">Look for forms</button>
           </div>
-          <!-- Search Tab -->
-          <div class="search-tab" id="searchTab">
-            <button class="back-search" onclick="ChatbotWidget.closeSearchTab()">← Back</button>
-            <h2 class="search-tab-title">Search Resources</h2>
-            <div class="search-tab-header">
-              <input type="text" id="searchTabInput" placeholder="Search..." />
-            </div>
-            <div id="searchResults"></div>
+          <div class="resource-section forms-section">
+            <h4>Popular Forms</h4>
+            <div class="resource-list forms-list"></div>
+          </div>
+        </div>
+        <!-- Option 3: Invoices -->
+        <div class="option-container" data-placeholder="Search for invoices">
+          <button class="main-option">
+            <span class="option-icon">📄</span>
+            <span class="option-text">How to use our invoice builder</span>
+            <span class="arrow">></span>
+          </button>
+          <div class="sub-options">
+            <button class="back-button">&#8592;</button>
+            <button class="sub-option">Watch Video</button>
+            <button class="sub-option">Contact with Support <span class="toggle-icon">►</span></button>
+            <button class="sub-option">Create invoices now</button>
+          </div>
+        </div>
+        <!-- Option 4: Checklists -->
+        <div class="option-container" data-placeholder="Search for checklists">
+          <button class="main-option">
+            <span class="option-icon">☑️</span>
+            <span class="option-text">How to use our checklists</span>
+            <span class="arrow">></span>
+          </button>
+          <div class="sub-options">
+            <button class="back-button">&#8592;</button>
+            <button class="sub-option">Watch Video - how to download</button>
+            <button class="sub-option">Contact with Support <span class="toggle-icon">►</span></button>
+            <button class="sub-option">Look for checklists</button>
+          </div>
+          <div class="resource-section checklists-section">
+            <h4>Popular Checklists</h4>
+            <div class="resource-list checklists-list"></div>
+          </div>
+        </div>
+        <!-- Option 5: Templates -->
+        <div class="option-container" data-placeholder="Search for templates">
+          <button class="main-option">
+            <span class="option-icon">📑</span>
+            <span class="option-text">How to use our templates</span>
+            <span class="arrow">></span>
+          </button>
+          <div class="sub-options">
+            <button class="back-button">&#8592;</button>
+            <button class="sub-option">Watch Video</button>
+            <button class="sub-option">Contact with Support <span class="toggle-icon">►</span></button>
+            <button class="sub-option">Look for templates</button>
+          </div>
+          <div class="resource-section templates-section">
+            <h4>Popular Templates</h4>
+            <div class="resource-list templates-list"></div>
+          </div>
+        </div>
+        <!-- Option 6: Tools -->
+        <div class="option-container" data-placeholder="Search for tools">
+          <button class="main-option">
+            <span class="option-icon">🛠️</span>
+            <span class="option-text">How to use our tools</span>
+            <span class="arrow">></span>
+          </button>
+          <div class="sub-options">
+            <button class="back-button">&#8592;</button>
+            <button class="sub-option">Watch Video</button>
+            <button class="sub-option">Contact with Support <span class="toggle-icon">►</span></button>
+            <button class="sub-option">Look for more Tools</button>
+          </div>
+          <div class="video-container">
+            <button class="close-video" onclick="ChatbotWidget.closeVideo(event)">Close Video</button>
+            <iframe src="https://www.youtube.com/embed/o99EznX3ABw?si=rNQ3IfO8C6t3lwOS" title="YouTube video player" frameborder="0" allowfullscreen></iframe>
+          </div>
+          <div class="resource-section tools-section">
+            <h4>Popular Tools</h4>
+            <div class="resource-list tools-list"></div>
           </div>
         </div>
       </div>
+      <!-- Search Tab (second tab) -->
+      <div class="search-tab" id="searchTab">
+        <button class="back-search" onclick="ChatbotWidget.closeSearchTab()">← Back</button>
+        <h2 class="search-tab-title">Search Resources</h2>
+        <div class="search-tab-header">
+          <input type="text" id="searchTabInput" placeholder="Search..." />
+        </div>
+        <div id="searchResults"></div>
+      </div>
+    </div>
+  </div>
     `;
 
-    // Inject CSS styles
+    // Inject CSS styles exactly as in your original code.
     var style = document.createElement('style');
     style.innerHTML = `
-      /* Basic Styles */
-      body { font-family: 'Roboto', sans-serif; margin: 0; padding: 0; background: #f9f9f9; }
-      .chatbot-notification { position: fixed; bottom: 30px; right: 90px; background: #ee5566; color: #fff; padding: 10px 15px; border-radius: 20px; font-size: 14px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); animation: fadeIn 0.5s ease; z-index: 999; }
-      @keyframes fadeIn { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; transform: translateX(0); } }
-      .chatbot-icon { position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; background: #ee5566; border-radius: 50%; cursor: pointer; z-index: 1000; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 30px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); transition: transform 0.3s ease, box-shadow 0.3s ease; }
-      .chatbot-icon:hover { transform: scale(1.1); box-shadow: 0 6px 12px rgba(0,0,0,0.3); }
-      .chatbot-window { position: fixed; bottom: 90px; right: 20px; width: 450px; height: 700px; background: #fff; border-radius: 12px; box-shadow: 0 8px 16px rgba(0,0,0,0.2); z-index: 1000; overflow: hidden; opacity: 0; transform: translateY(20px); pointer-events: none; transition: opacity 0.4s ease, transform 0.4s ease; }
-      .chatbot-window.open { opacity: 1; transform: translateY(0); pointer-events: auto; }
-      .chatbot-window.maximized { width: 40%; height: 90%; bottom: 5%; right: 5%; }
-      .chatbot-header { background: #ee5566; color: #fff; padding: 15px 10px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-      .bot-header-content { display: flex; align-items: center; gap: 10px; }
-      .avatar { width: 70px; height: 70px; border-radius: 50%; }
-      .bot-text { display: flex; flex-direction: column; line-height: 1.2; }
-      .bot-name { font-size: 18px; font-weight: 500; }
-      .bot-tagline { font-size: 12px; color: #f5f5f5; }
-      .maximize-button { background: transparent; border: none; color: #fff; font-size: 18px; cursor: pointer; transition: color 0.3s ease; }
-      .maximize-button:hover { color: #f5f5f5; }
-      .chatbot-body { padding: 15px; height: calc(100% - 60px); overflow-y: auto; font-size: 16px; line-height: 1.5; color: #333; }
-      .search-container { padding: 15px 15px 20px 0; }
-      .search-input-wrapper { position: relative; }
-      .search-input-wrapper input { width: 90%; padding: 10px 10px 10px 40px; font-size: 16px; border: 1px solid #ccc; border-radius: 4px; }
-      .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 18px; color: #888; }
-      .chatbot-options { display: flex; flex-direction: column; gap: 12px; transition: opacity 0.4s ease; }
-      .option-container { border: 2px solid #f0f0f0; border-radius: 8px; overflow: hidden; background: #fff; transition: opacity 0.4s ease, transform 0.4s ease; }
-      .hidden { opacity: 0; pointer-events: none; transform: translateY(20px); }
-      .main-option { display: flex; align-items: center; justify-content: space-between; padding: 15px 20px; font-size: 16px; color: #333; cursor: pointer; background: #fff; border: none; width: 100%; text-align: left; transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease; }
-      .main-option:hover { background: #f6f6f6; transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-      .option-icon { margin-right: 10px; font-size: 20px; }
-      .arrow { transition: transform 0.3s ease; }
-      .arrow.rotated { transform: rotate(90deg); }
-      .sub-options { max-height: 0; overflow: hidden; display: flex; flex-direction: column; gap: 8px; padding: 0 20px; background: #fafafa; transition: max-height 0.4s ease, opacity 0.4s ease; opacity: 0; }
-      .sub-options.open { max-height: 300px; opacity: 1; padding-bottom: 15px; }
-      .sub-option { padding: 10px 15px; font-size: 14px; color: #555; background: #fff; border: 1px solid #e0e0e0; border-radius: 6px; cursor: pointer; transition: background 0.2s ease, transform 0.2s ease; text-align: left; }
-      .sub-option:hover { background: #f0f0f0; transform: translateX(5px); }
-      .toggle-icon { margin-left: 5px; }
-      .back-button { background: transparent; border: none; color: #ee5566; font-size: 18px; margin-bottom: 8px; cursor: pointer; text-align: left; }
-      .back-button:hover { color: #cc4455; }
-      .resource-section { display: none; background: #f0f4f8; padding: 20px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.1); margin: 15px 20px 20px; transition: max-height 0.4s ease, opacity 0.4s ease; max-height: 0; overflow: hidden; opacity: 0; }
-      .resource-section.open { display: block; max-height: 400px; opacity: 1; }
-      .resource-section h4 { margin: 0 0 15px; font-size: 18px; color: #333; font-weight: 500; }
-      .resource-list { display: flex; flex-wrap: wrap; gap: 15px; }
-      .resource-item { background: #fff; border: 1px solid #ddd; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding: 15px; flex: 1 1 calc(50% - 15px); transition: transform 0.2s ease, box-shadow 0.2s ease; display: flex; align-items: center; justify-content: center; }
-      .resource-item:hover { transform: translateY(-3px); box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
-      .resource-item a { text-decoration: none; color: #333; font-size: 16px; text-align: center; width: 100%; }
-      .video-container { display: none; margin: 15px 20px; position: relative; }
-      .video-container.open { display: block; }
-      .video-container iframe { width: 100%; height: 250px; border: none; border-radius: 8px; }
-      .close-video { position: absolute; top: 10px; right: 10px; background: #ee5566; color: #fff; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 14px; z-index: 11; }
-      .close-video:hover { background: #cc4455; }
-      .search-tab { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: #fff; padding: 20px; overflow-y: auto; z-index: 10; opacity: 0; transform: translateY(20px); pointer-events: none; transition: opacity 0.4s ease, transform 0.4s ease; border-top: 2px solid #ee5566; }
-      .search-tab.open { opacity: 1; transform: translateY(0); pointer-events: auto; }
-      .search-tab-title { font-size: 20px; margin-bottom: 15px; color: #333; text-align: center; }
-      .search-tab-header { display: flex; align-items: center; margin-bottom: 15px; }
-      .search-tab-header input { width: 100%; padding: 10px; font-size: 16px; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 15px; }
-      .back-search { background: transparent; border: none; color: #ee5566; font-size: 16px; margin-bottom: 15px; cursor: pointer; }
-      .search-results-section { margin-bottom: 20px; }
-      .search-results-section h4 { margin-bottom: 10px; font-size: 18px; color: #333; }
-      .search-item { padding: 10px; border-bottom: 1px solid #e0e0e0; font-size: 16px; color: #333; }
-      .support-suboptions { margin-top: 4px; padding: 8px; background: #f7f7f7; border: 1px solid #ddd; border-radius: 6px; overflow: hidden; max-height: 0; opacity: 0; transition: max-height 0.3s ease, opacity 0.3s ease; display: flex; flex-direction: column; gap: 8px; }
-      .support-suboptions.open { max-height: 100px; opacity: 1; }
-      .support-option { font-size: 14px; color: #555; }
-      .support-option a { text-decoration: none; color: #ee5566; }
-    `;
+body {
+  font-family: 'Roboto', sans-serif;
+  margin: 0;
+  padding: 0;
+  background: #f9f9f9;
+}
+/* Floating chat icon */
+.chatbot-icon {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 60px;
+  height: 60px;
+  background-color: #ee5566;
+  border-radius: 50%;
+  cursor: pointer;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 30px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.chatbot-icon:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+/* Notification bubble */
+.chatbot-notification {
+  position: fixed;
+  bottom: 30px;
+  right: 90px;
+  background-color: #ee5566;
+  color: #fff;
+  padding: 10px 15px;
+  border-radius: 20px;
+  font-size: 14px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  animation: fadeIn 0.5s ease;
+  z-index: 999;
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+/* Chat window container */
+.chatbot-window {
+  position: fixed;
+  bottom: 90px;
+  right: 20px;
+  width: 450px;
+  height: 700px;
+  background-color: #fff;
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(20px);
+  pointer-events: none;
+  transition: opacity 0.4s ease, transform 0.4s ease, width 0.4s ease,
+    height 0.4s ease, bottom 0.4s ease, right 0.4s ease;
+}
+.chatbot-window.open {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+.chatbot-window.maximized {
+  width: 40%;
+  height: 90%;
+  bottom: 5%;
+  right: 5%;
+}
+/* Chat window header */
+.chatbot-header {
+  background-color: #ee5566;
+  color: #fff;
+  padding: 15px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+.bot-header-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.avatar {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+}
+.bot-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+.bot-name {
+  font-size: 18px;
+  font-weight: 500;
+}
+.bot-tagline {
+  font-size: 12px;
+  color: #f5f5f5;
+}
+.maximize-button {
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 18px;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+.maximize-button:hover {
+  color: #f5f5f5;
+}
+/* Chat window body */
+.chatbot-body {
+  padding: 15px;
+  height: calc(100% - 60px);
+  overflow-y: auto;
+  font-size: 16px;
+  line-height: 1.5;
+  color: #333;
+  position: relative;
+}
+.chatbot-body::-webkit-scrollbar {
+  width: 8px;
+}
+.chatbot-body::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+/* Global Search bar (main view) */
+.search-container {
+  padding: 15px 15px 20px 0;
+}
+.search-input-wrapper {
+  position: relative;
+}
+.search-input-wrapper input {
+  width: 90%;
+  padding: 10px 10px 10px 40px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+.search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 18px;
+  color: #888;
+}
+/* Options accordion styling */
+.chatbot-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: opacity 0.4s ease;
+}
+.option-container {
+  border: 2px solid #f0f0f0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+.hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(20px);
+}
+.main-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px 20px;
+  font-size: 16px;
+  color: #333;
+  cursor: pointer;
+  background: #fff;
+  border: none;
+  width: 100%;
+  text-align: left;
+  transition: background-color 0.2s ease, transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+.main-option:hover {
+  background-color: #f6f6f6;
+  transform: translateY(-2px);
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+}
+.option-icon {
+  margin-right: 10px;
+  font-size: 20px;
+}
+.arrow {
+  transition: transform 0.3s ease;
+}
+.arrow.rotated {
+  transform: rotate(90deg);
+}
+/* Sub-options accordion */
+.sub-options {
+  max-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 20px;
+  background: #fafafa;
+  transition: max-height 0.4s ease, opacity 0.4s ease;
+  opacity: 0;
+}
+.sub-options.open {
+  max-height: 300px;
+  opacity: 1;
+  padding-bottom: 15px;
+}
+.sub-option {
+  padding: 10px 15px;
+  font-size: 14px;
+  color: #555;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+  text-align: left;
+}
+.sub-option:hover {
+  background-color: #f0f0f0;
+  transform: translateX(5px);
+}
+.toggle-icon {
+  margin-left: 5px;
+}
+/* Back button inside options */
+.back-button {
+  background: transparent;
+  border: none;
+  color: #ee5566;
+  font-size: 18px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  text-align: left;
+}
+.back-button:hover {
+  color: #cc4455;
+}
+/* Resource sections (for forms, templates, tools, checklists) */
+.resource-section {
+  display: none;
+  background: #f0f4f8;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  margin: 15px 20px 20px;
+  transition: max-height 0.4s ease, opacity 0.4s ease;
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+}
+.resource-section.open {
+  display: block;
+  max-height: 400px;
+  opacity: 1;
+}
+.resource-section h4 {
+  margin: 0 0 15px;
+  font-size: 18px;
+  color: #333;
+  font-weight: 500;
+}
+.resource-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+.resource-item {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 15px;
+  flex: 1 1 calc(50% - 15px);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.resource-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+.resource-item a {
+  text-decoration: none;
+  color: #333;
+  font-size: 16px;
+  text-align: center;
+  width: 100%;
+}
+/* Video Container with close button */
+.video-container {
+  display: none;
+  margin: 15px 20px;
+  position: relative;
+}
+.video-container.open {
+  display: block;
+}
+.video-container iframe {
+  width: 100%;
+  height: 250px;
+  border: none;
+  border-radius: 8px;
+}
+.close-video {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: #ee5566;
+  color: #fff;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  z-index: 11;
+}
+.close-video:hover {
+  background: #cc4455;
+}
+/* Search Tab styling (second tab) */
+.search-tab {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #fff;
+  padding: 20px;
+  overflow-y: auto;
+  z-index: 10;
+  opacity: 0;
+  transform: translateY(20px);
+  pointer-events: none;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+  border-top: 2px solid #ee5566;
+}
+.search-tab.open {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+.search-tab-title {
+  font-size: 20px;
+  margin-bottom: 15px;
+  color: #333;
+  text-align: center;
+}
+.search-tab-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+}
+.search-tab-header input {
+  width: 100%;
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  margin-bottom: 15px;
+}
+.back-search {
+  background: transparent;
+  border: none;
+  color: #ee5566;
+  font-size: 16px;
+  margin-bottom: 15px;
+  cursor: pointer;
+}
+.search-results-section {
+  margin-bottom: 20px;
+}
+.search-results-section h4 {
+  margin-bottom: 10px;
+  font-size: 18px;
+  color: #333;
+}
+.search-item {
+  padding: 10px;
+  border-bottom: 1px solid #e0e0e0;
+  font-size: 16px;
+  color: #333;
+}
+/* Support sub-options (for Contact with Support toggle) */
+.support-suboptions {
+  margin-top: 4px;
+  padding: 8px;
+  background: #f7f7f7;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transition: max-height 0.3s ease, opacity 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.support-suboptions.open {
+  max-height: 100px;
+  opacity: 1;
+}
+.support-option {
+  font-size: 14px;
+  color: #555;
+}
+.support-option a {
+  text-decoration: none;
+  color: #ee5566;
+}
+`;
     document.head.appendChild(style);
 
-    // Attach event listeners after a slight delay to ensure the HTML is rendered
+    // Attach event listeners after HTML is rendered.
     setTimeout(attachEventListeners, 100);
   }
 
@@ -250,7 +615,7 @@ var ChatbotWidget = (function() {
     chatbotWindow.classList.toggle('maximized');
   }
 
-  // Close search tab (if open)
+  // Close search tab
   function closeSearchTab() {
     var searchTab = document.getElementById('searchTab');
     searchTab.classList.remove('open');
@@ -283,7 +648,7 @@ var ChatbotWidget = (function() {
     }
   }
 
-  // Attach event listeners for all interactive elements
+  // Attach event listeners for interactive elements
   function attachEventListeners() {
     var optionContainers = document.querySelectorAll('.option-container');
     var optionsParent = document.getElementById('chatbotOptions');
@@ -570,10 +935,10 @@ var ChatbotWidget = (function() {
     searchResults.innerHTML = html;
   }
 
-  // Attach event listeners after HTML is injected
+  // Attach event listeners after a slight delay to ensure HTML is rendered.
   setTimeout(attachEventListeners, 100);
 
-  // Expose public API
+  // Public API
   return {
     init: init,
     toggleChatbot: toggleChatbot,
