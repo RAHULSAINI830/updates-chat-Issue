@@ -9,7 +9,7 @@ var ChatbotWidget = (function() {
     Hey, how can I help you today?
   </div>
   <!-- Floating chat icon -->
-  <div class="chatbot-icon" onclick="toggleChatbot()">💬</div>
+  <div class="chatbot-icon" onclick="ChatbotWidget.toggleChatbot()">💬</div>
   <!-- Chat window -->
   <div class="chatbot-window" id="chatbotWindow">
     <div class="chatbot-header">
@@ -595,6 +595,7 @@ body {
     // Attach event listeners after HTML is rendered.
     setTimeout(attachEventListeners, 100);
   }
+window.toggleChatbot = toggleChatbot;
 
   // Toggle chat window open/close
   function toggleChatbot() {
